@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arivu Library</title>
+  <link rel="icon" href="assets/logo.png">
+
+  <style>
+    :root {
+      --topbar-bg: #ffffff;
+      --footer-bg: #003366;
+      --button-accent: #FFD700;
+      --background: #F8F3CE;
+      --text-dark: #003366;
+      --text-light: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--background);
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+      padding-top: 70px;
+    }
+
+    /* ---------- Top Bar ---------- */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background-color: var(--topbar-bg);
+      border-bottom: 3px solid var(--footer-bg);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      height: 70px;
+      z-index: 1000;
+    }
+
+    .logo-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-name img {
+      height: 45px;
+    }
+
+    .logo-name h1 {
+      font-size: 2rem;
+      color: var(--text-dark);
+      font-family: 'Times New Roman', serif;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 25px;
+    }
+
+    nav ul li a {
+      text-decoration: none;
+      font-weight: bold;
+      color: var(--text-dark);
+      font-size: 1rem;
+      transition: color 0.3s;
+    }
+
+    nav ul li a:hover {
+      color: var(--button-accent);
+    }
+nav {
+  display: flex;
+  align-items: center;
+  gap: 30px;   /* spacing between items */
+}
+
+    .login button {
+      padding: 8px ;
+      background-color: var(--button-accent);
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+
+    .login button:hover {
+      background-color: #e6c400;
+      transform: translateY(-3px);
+    }
+
+    /* ---------- Hero Section ---------- */
+    .hero {
+      height: 90vh;
+      background: linear-gradient(rgba(0, 51, 102, 0.6), rgba(0, 51, 102, 0.6)),
+                  url('https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2070&auto=format&fit=crop')
+                  center/cover no-repeat;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      color: var(--text-light);
+      padding: 0 5%;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .hero p {
+      font-size: 1.3rem;
+      margin-bottom: 2rem;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background-color: var(--button-accent);
+      color: var(--text-dark);
+      padding: 0.8rem 2rem;
+      border-radius: 50px;
+      font-weight: bold;
+      text-decoration: none;
+      font-size: 1.1rem;
+      transition: transform 0.3s, background-color 0.3s;
+    }
+
+    .cta-button:hover {
+      background-color: #e6c400;
+      transform: translateY(-3px);
+    }
+
+    /* ---------- About Section ---------- */
+    .info {
+      padding: 60px 20px;
+      text-align: center;
+      background-color: #fff9e6;
+    }
+
+    .info h2 {
+      font-size: 2.5rem;
+      color: var(--text-dark);
+      margin-bottom: 20px;
+    }
+
+    .info p {
+      font-size: 1.1rem;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* ---------- Features Section ---------- */
+    .features {
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .features-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 30px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .feature-card {
+      background-color: white;
+      border-radius: 10px;
+      width: 260px;
+      padding: 25px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+    }
+
+    .feature-card img {
+      height: 70px;
+      margin-bottom: 15px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.3rem;
+      color: var(--text-dark);
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      font-size: 1rem;
+      color: #555;
+      line-height: 1.5;
+    }
+
+    /* ---------- Footer ---------- */
+    footer {
+      background-color: var(--footer-bg);
+      color: var(--text-light);
+      padding: 40px 20px 20px 20px;
+    }
+
+    .footer-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      max-width: 1200px;
+      margin: 0 auto;
+      gap: 30px;
+    }
+
+    .footer-about, .links, .contact {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    .footer-about h3, .links h4, .contact h4 {
+      margin-bottom: 15px;
+      color: var(--button-accent);
+    }
+
+    .links ul {
+      list-style: none;
+    }
+
+    .links ul li {
+      margin-bottom: 10px;
+    }
+
+    .links ul li a {
+      color: #ddd;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    .links ul li a:hover {
+      color: var(--button-accent);
+    }
+
+    .contact p {
+      margin-bottom: 10px;
+    }
+
+    .footer-bottom {
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.3);
+      margin-top: 20px;
+      padding-top: 15px;
+      font-size: 0.9rem;
+      color: #ddd;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .features-container {
+        flex-direction: column;
+        align-items: center;
+      }
+      nav ul {
+        gap: 15px;
+      }
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+      .hero p {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Top Bar -->
+  <header>
+    <div class="logo-name">
+      <img src="assets/logo.png" alt="Arivu Logo">
+      <h1>Arivu</h1>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+      <div class="login">
+        <button onclick="window.location.href='test/login_page.php  '">Login / SignUp</button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero" id="home">
+    <div>
+      <h1>Empowering Knowledge Through Digital Access</h1>
+      <p>Read. Learn. Share. Grow.</p>
+      <a href="#features" class="cta-button">Explore Now</a>
+    </div>
+  </section>
+
+  <!-- About -->
+  <section class="info" id="about">
+    <h2>About Arivu</h2>
+    <p>
+      Arivu is a modern library management system designed to make managing books, users, and transactions simple and efficient.
+      Users can explore resources, reserve books online, and access recommendations. 
+      Arivu brings efficiency, security, and convenience to every library experience.
+    </p>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <h2 style="color:#003366; margin-bottom:30px;">Our Features</h2>
+    <div class="features-container">
+      <div class="feature-card">
+        <img src="assets/books.png" alt="Books">
+        <h3>Books Collection</h3>
+        <p>Explore a vast collection of books across genres and subjects for every curious mind.</p>
+      </div>
+      <div class="feature-card">
+        <img src="assets/digital.png" alt="Digital Library">
+        <h3>Digital Library</h3>
+        <p>Access thousands of e-books, journals, and research materials anytime, anywhere.</p>
+      </div>
+      <div class="feature-card">
+        <img src="assets/report.png" alt="Reports & Papers">
+        <h3>Reports & Papers</h3>
+        <p>Upload and share your research papers and projects with the community.</p>
+      </div>
+      <div class="feature-card">
+        <img src="assets/events.png" alt="Events">
+        <h3>Events & Workshops</h3>
+        <p>Participate in engaging workshops, seminars, and reading sessions to grow your skills.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact">
+    <div class="footer-container">
+      <div class="footer-about">
+        <h3>Arivu Library</h3>
+        <p>Arivu simplifies managing books and users and provides seamless digital access for students and teachers.</p>
+      </div>
+      <div class="links">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#features">Features</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+      <div class="contact">
+        <h4>Contact Us</h4>
+        <p>Email: info@arivu.com</p>
+        <p>Phone: +91 1234567890</p>
+        <p>Address: 123 Library Street, City</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2025 Arivu Library. All Rights Reserved.
+    </div>
+  </footer>
+  
+
+</body>
+</html>

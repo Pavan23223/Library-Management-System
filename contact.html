@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arivu - Contact</title>
+  <link rel="icon" href="assets/logo.png">
+
+  <style>
+    :root {
+      --topbar-bg: #ffffff;
+      --footer-bg: #003366;
+      --button-accent: #FFD700;
+      --background: #F8F3CE;
+      --text-dark: #003366;
+      --text-light: #ffffff;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--background);
+      padding-top: 70px; /* space for fixed navbar */
+    }
+
+    /* ---------- Top Bar ---------- */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      height: 70px;
+      background-color: var(--topbar-bg);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 3px solid var(--footer-bg);
+      z-index: 1000;
+    }
+
+    /* Navigator left + Logo */
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo img {
+      height: 45px;
+    }
+
+    .logo h1 {
+      font-family: 'Times New Roman', serif;
+      font-size: 2rem;
+      color: var(--text-dark);
+    }
+
+    /* ---------- Contact Section ---------- */
+    .contact-container {
+      display: flex;
+      flex-wrap: wrap;
+      max-width: 1100px;
+      margin: 50px auto;
+      gap: 40px;
+      padding: 0 20px;
+    }
+
+    /* Left section - Form */
+    .contact-form {
+      flex: 1;
+      min-width: 280px;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .contact-form h2 {
+      color: var(--text-dark);
+      margin-bottom: 20px;
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .contact-form textarea {
+      resize: vertical;
+      height: 120px;
+    }
+
+    .contact-form button {
+      background-color: var(--text-dark);
+      color: var(--text-light);
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .contact-form button:hover {
+      background-color: var(--button-accent);
+      color: var(--text-dark);
+      transform: scale(1.05);
+      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* Right section - Contact details */
+    .contact-details {
+      flex: 1;
+      min-width: 280px;
+      background-color: #fff9e6;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .contact-details h2 {
+      color: var(--text-dark);
+      margin-bottom: 20px;
+    }
+
+    .contact-details p {
+      margin-bottom: 12px;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+      .contact-container {
+        flex-direction: column;
+      }
+      header {
+        flex-direction: column;
+        height: auto;
+        padding: 10px 20px;
+      }
+      .topbar-left {
+        margin-bottom: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Top Bar -->
+  <header>
+    <div class="topbar-left">
+      <div class="logo">
+        <img src="assets/logo.png" alt="Arivu Logo">
+        <h1>Arivu</h1>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contact Section -->
+  <div class="contact-container">
+    <!-- Left Section - Form -->
+    <div class="contact-form">
+      <h2>Send a Query</h2>
+      <form id="contactForm">
+        <input type="text" id="name" placeholder="Your Name" required>
+        <input type="email" id="email" placeholder="Your Email" required>
+        <textarea id="query" placeholder="Describe your query..." required></textarea>
+        <button type="submit">Submit</button>
+        <div id="formMessage" style="margin-top: 10px; font-weight: bold;"></div>
+
+      </form>
+    </div>
+
+    <!-- Right Section - Details -->
+    <div class="contact-details">
+      <h2>Contact Details</h2>
+      <p><strong>Address:</strong> 123 Library Street, City</p>
+      <p><strong>Email:</strong> info@arivu.com</p>
+      <p><strong>Phone:</strong> +91 1234567890</p>
+      <p><strong>Office Hours:</strong> Mon - Fri: 9:00 AM - 6:00 PM</p>
+    </div>
+  </div>
+<div style="position: fixed; bottom: 20px; left: 20px;">
+  <button onclick="goBack()" 
+          style="padding: 10px 20px; background-color:#003366; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">
+     Back
+  </button>
+</div>
+  <!-- EmailJS Script -->
+   <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+  // Initialize with your public key
+emailjs.init("QrlstEKP98DuRjfNU"); 
+
+  const form = document.getElementById('contactForm');
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault(); // prevent default form submission
+const templateParams = {
+  name: document.getElementById('name').value,
+  title: document.getElementById('query').value,
+  email: document.getElementById('email').value  
+};
+    emailjs.send("service_kral3iq", "template_8zcjuj9", templateParams)
+   .then(function(response) {
+      console.log("SUCCESS!", response.status, response.text);
+      formMessage.style.color = "green";
+      formMessage.textContent = "Your query has been sent successfully!";
+      form.reset();
+    }, function(error) {
+      console.error("FAILED...", error);
+      formMessage.style.color = "red";
+      formMessage.textContent = "Oops! Something went wrong. Please try again.";
+    });
+});
+  function goBack() {
+    window.history.back(); // goes to the previous page in history
+  }
+
+</script>
+</body>
+</html>

@@ -1,0 +1,909 @@
+   :root {
+        --sidebar-bg: #003366;
+        --accent: #FFD700;
+        --text-dark: #003366;
+        --card-bg: #ffffff;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family:Arial,sans-serif; }
+    body { background:#F8F3CE; color:#333; display:flex; flex-direction:column; min-height:100vh; }
+
+    /* TOPBAR */
+    .topbar { background:#fff; color:var(--text-dark); display:flex; justify-content:space-between; align-items:center; padding:12px 30px; border-bottom:2px solid var(--text-dark); }
+    .topbar-left { display:flex; align-items:center; }
+    .topbar-left img { height:45px; margin-right:12px; }
+    .topbar-left span { font-size:1.6rem; font-weight:bold; color:var(--text-dark); }
+    .topbar-right { display:flex; align-items:center; gap:25px; }
+    .topbar-right a { color:var(--text-dark); text-decoration:none; font-size:1rem; font-weight:500; }
+    .topbar-right a:hover { color:var(--accent); }
+.profile-container {
+    position: relative;
+    width: 60px;   /* match profile-pic */
+    height: 60px;
+}
+
+.profile-pic {
+    width: 100%;         /* fill the container */
+    height: 100%;
+    border-radius: 50%;  /* makes it circular */
+    object-fit: cover;
+    cursor: pointer;
+    border: 2px solid var(--accent);
+}
+
+
+.dropdown {
+    position: absolute;
+    right: 0;
+    top: 50px;
+    display: none;
+    background: #fff;
+    color: var(--text-dark);
+    min-width: 180px;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    padding: 10px;
+    z-index: 1000;
+}
+
+.dropdown.show {
+    display: block;
+}
+
+
+    .dropdown { position:absolute; right:0; top:50px; display:none; background:#fff; color:var(--text-dark); min-width:180px; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.2); padding:10px; z-index:1000; }
+    .dropdown.show { display:block; }
+    .dropdown p { margin:8px 0; font-size:0.9rem; }
+    .dropdown hr { border:none; border-top:1px solid #ccc; margin:8px 0; }
+
+    /* DASHBOARD LAYOUT */
+    .dashboard-container { flex:1; display:flex; overflow:hidden; min-height:calc(100vh - 66px); }
+    .sidebar { background:var(--sidebar-bg); color:white; width:220px; padding-top:20px; border-right:2px solid #ddd; }
+    .sidebar ul { list-style:none; }
+    .sidebar ul li { padding:12px 20px; font-weight:500; cursor:pointer; transition: background 0.3s; }
+    .sidebar ul li:hover, .sidebar ul li.active { background:var(--accent); color:var(--text-dark); }
+    .sidebar ul li a { color:inherit; text-decoration:none; display:block; }
+
+    .rightinnerdiv { flex:1; padding:20px; overflow-y:auto; }
+
+    h1.dashboard-title { margin-bottom:20px; color:var(--text-dark); }
+    .cards-row { display:flex; gap:20px; margin-bottom:30px; flex-wrap:wrap; }
+    .card { flex:1; min-width:200px; background:var(--card-bg); padding:20px; border-radius:10px; box-shadow:0 3px 8px rgba(0,0,0,0.1); text-align:center; }
+    .card h2 { font-size:2rem; margin:10px 0; color:var(--text-dark); }
+    .card p { font-size:1rem; color:#555; }
+
+    form label { display:block; margin-top:10px; }
+    form input, form select { padding:8px; width:100%; margin-top:4px; }
+    form input[type="submit"], .greenbtn { margin-top:15px; padding:10px 15px; background-color:var(--accent); border:none; cursor:pointer; }
+
+    .branch-options { display:flex; flex-wrap:wrap; gap:15px; margin-top:4px; }
+    .branch-options label { display:flex; align-items:center; gap:5px; cursor:pointer; }
+
+    .styled-table { border-collapse: collapse; margin: 20px 0; font-size: 16px; font-family: Arial, Helvetica, sans-serif; width: 100%; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    .styled-table th, .styled-table td { padding:12px 15px; border:1px solid #ddd; text-align:left; }
+    .styled-table th { background-color:#003366; color:#ffffff; text-transform:uppercase; }
+    .styled-table tr { background-color:#f8f3ce; }
+    .styled-table tr:nth-child(even) { background-color:#e0dcae; }
+    .styled-table tr:hover { background-color:#ffd700; cursor:pointer; }
+
+    .book-thumb { width:80px; height:80px; object-fit:cover; margin-right:10px; vertical-align:middle; }
+    .btn-primary { background-color:#003366; color:#fff; border:none; padding:6px 12px; border-radius:4px; }
+    .btn-primary:hover { background-color:#ffd700; color:#003366; }
+
+    #messageBox { display:none; position:fixed; top:10px; left:50%; width:500px; text-align:center; transform:translateX(-50%); background-color:#FFD700; color:#003366; padding:10px 20px; border-radius:5px; z-index:1000; }
+    /* ===================== ISSUE BOOK FORM ===================== */
+    #issuebook form {
+        width: 100%;
+        background: var(--card-bg);
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-top: 20px;
+    }
+
+    #issuebook form label {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-top: 15px;
+    }
+
+    #issuebook form input[type="number"],
+    #issuebook form select {
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        font-size: 1rem;
+    }
+
+    #issuebook form input[type="submit"] {
+        background-color: var(--accent);
+        color: var(--text-dark);
+        font-weight: 600;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 6px;
+        margin-top: 20px;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    #issuebook form input[type="submit"]:hover {
+        background-color: var(--text-dark);
+        color: var(--accent);
+    }
+
+
+    /* ===================== BOOK REPORT ===================== */
+#bookreport table,
+#bookdetail table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, Helvetica, sans-serif;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 15px;
+}
+
+#bookreport th,
+#bookreport td,
+#bookdetail th,
+#bookdetail td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+#bookreport th,
+#bookdetail th {
+    background-color: #003366;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+#bookreport tr:nth-child(even),
+#bookdetail tr:nth-child(even) {
+    background-color: #e0dcae;
+}
+
+#bookreport tr:hover,
+#bookdetail tr:hover {
+    background-color: #ffd700;
+    cursor: pointer;
+}
+
+/* Buttons in table */
+#bookreport .btn-primary,
+#bookdetail .btn-primary {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+#bookreport .btn-primary:hover,
+#bookdetail .btn-primary:hover {
+    background-color: #ffd700;
+    color: #003366;
+}
+
+/* ===================== VIEW BOOK DETAIL ===================== */
+/* ===================== VIEW BOOK DETAIL ===================== */
+/* Book Details container */
+.bookdetail-container {
+    display: flex;
+    gap: 30px;               /* Space between image and info */
+    flex-wrap: wrap;         /* Wrap on small screens */
+    align-items: flex-start; /* Align image top with info */
+    background-color: #fff8e1; /* Light cream background */
+    padding: 25px;           /* Inner spacing */
+    border-radius: 12px;     /* Rounded corners */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Subtle shadow */
+    width: 100%;             /* Full width of parent */
+    max-width: 900px;        /* Limit maximum width */
+    margin-top: 20px;
+}
+
+/* Book image */
+.bookdetail-container .book-img img {
+    width: 200px;            /* Fixed width */
+    height: auto;            /* Maintain aspect ratio */
+    border-radius: 8px;
+    border: 1px solid #333;
+    flex-shrink: 0;          /* Prevent shrinking */
+}
+
+/* Book info */
+.bookdetail-container .book-info {
+    flex: 1;                 /* Take remaining space */
+    color: #003366;
+    font-size: 1rem;
+}
+
+.bookdetail-container .book-info p {
+    margin: 8px 0;
+}
+
+
+
+
+/* ===================== BOOK REQUEST APPROVE & ISSUE BOOK REPORT ===================== */
+#bookrequestapprove,
+#issuebookreport {
+    background-color: #fff8e1;       /* Light cream background */
+    padding: 25px;                   /* Inner spacing */
+    border-radius: 12px;             /* Rounded corners */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Subtle shadow */
+    margin-top: 20px;
+    width: 100%;                     /* Full width of parent */
+    max-width: 100%;                 /* Remove max width restriction */
+    overflow-x: auto;                /* Horizontal scroll if table is too wide */
+}
+
+/* Table inside request approve & issue report */
+#bookrequestapprove table,
+#issuebookreport table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-top: 15px;
+    min-width: 600px;                /* Minimum width for table */
+}
+
+#bookrequestapprove th,
+#issuebookreport th,
+#bookrequestapprove td,
+#issuebookreport td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+#bookrequestapprove th,
+#issuebookreport th {
+    background-color: var(--sidebar-bg);
+    color: #fff;
+    text-transform: uppercase;
+}
+
+#bookrequestapprove tr:nth-child(even),
+#issuebookreport tr:nth-child(even) {
+    background-color: #e0dcae;
+}
+
+#bookrequestapprove tr:hover,
+#issuebookreport tr:hover {
+    background-color: #ffd700;
+    cursor: pointer;
+}
+
+/* Buttons inside tables */
+#bookrequestapprove .btn-primary,
+#issuebookreport .btn-primary {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    transition: 0.3s;
+}
+
+#bookrequestapprove .btn-primary:hover,
+#issuebookreport .btn-primary:hover {
+    background-color: var(--accent);
+    color: var(--text-dark);
+}
+
+.logout-btn {
+  background-color: #ff4b5c;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+.delete-btn{
+  
+}
+
+.logout-btn:hover {
+  background-color: #e63b4a;
+}
+.feedback-card {
+  background-color: #ffffff;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 70%;
+  margin: auto;
+  transition: 0.3s;
+}
+
+.feedback-card:hover {
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.feedback-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #003366;
+}
+
+.form-control {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.form-control:focus {
+  border-color: #FFD700;
+}
+
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.btn-primary {
+  background-color: #FFD700;
+  color: #003366;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #003366;
+  color: #ffffff;
+}
+
+
+/* Hamburger button */
+.menu-btn {
+  display: none;
+  font-size: 1.8rem;
+  background: none;
+  border: none;
+  color: var(--text-dark);
+  cursor: pointer;
+}
+
+/* ---------- TABLET & MOBILE VIEW ---------- */
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 10px;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* small gap between logo and text */
+  }
+
+  .topbar-left img {
+    height: 28px; /* smaller logo */
+    margin-right: 4px;
+  }
+
+  .topbar-left span {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* tighter spacing */
+  }
+
+  .topbar-right a {
+    font-size: 0.75rem;
+  }
+
+  .logout-btn {
+    padding: 3px 7px;
+    font-size: 0.7rem;
+    border-radius: 5px;
+  }
+
+  .profile-container {
+    width: 26px;
+    height: 26px;
+  }
+
+  .profile-pic {
+    border: 1px solid var(--accent);
+  }
+
+  .menu-btn {
+    display: block;
+    font-size: 1.2rem;
+    margin-right: 6px;
+  }
+
+  .sidebar {
+    width: 190px;
+  }
+
+  .sidebar ul li {
+    font-size: 0.85rem;
+    padding: 8px 12px;
+  }
+}
+
+/* ---------- EXTRA SMALL PHONES (<450px) ---------- */
+@media (max-width: 450px) {
+  .topbar {
+    padding: 3px 6px;
+    gap: 4px;
+  }
+
+  .topbar-left {
+    gap: 4px;
+  }
+
+  .topbar-left img {
+    height: 22px;
+  }
+
+  .topbar-left span {
+    font-size: 0.85rem;
+  }
+
+  .topbar-right {
+    gap: 5px;
+  }
+
+  .topbar-right a {
+    font-size: 0.7rem;
+  }
+
+  .logout-btn {
+    padding: 2px 5px;
+    font-size: 0.65rem;
+  }
+
+  .profile-container {
+    width: 24px;
+    height: 24px;
+  }
+
+  .menu-btn {
+    font-size: 1rem;
+  }
+
+  .sidebar {
+    width: 170px;
+  }
+
+  .sidebar ul li {
+    font-size: 0.8rem;s
+    padding: 7px 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar-right a,
+  .logout-btn {
+    display: none;
+  }
+}
+
+.fine-card {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 25px 40px;
+  max-width: 750px;
+  margin: 40px auto;
+  text-align: left;
+  transition: all 0.3s ease;
+}
+
+.fine-card:hover {
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  transform: translateY(-3px);
+}
+
+.fine-card .dashboard-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #003366;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.fine-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fine-card label {
+  font-weight: 600;
+  color: #003366;
+}
+
+.fine-card select,
+.fine-card input[type="text"],
+.fine-card input[type="number"] {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  background-color: #f8f3ce;
+}
+
+.fine-card select:focus,
+.fine-card input:focus {
+  outline: none;
+  border-color: #ffd700;
+  box-shadow: 0 0 5px #ffd700;
+}
+
+
+.submit-btn {
+  background-color: #003366;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #ffd700;
+  color: #003366;
+}
+
+.form-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 35px 40px;
+  max-width: 600px;
+  margin: 40px auto;
+  border: 1px solid #ddd;
+  transition: 0.3s ease;
+}
+
+.form-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #003366;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-card label {
+  font-weight: 600;
+  color: #003366;
+  margin-bottom: 6px;
+}
+
+.form-card input[type="text"],
+.form-card input[type="password"],
+.form-card input[type="email"],
+.form-card input[type="number"],
+.form-card input[type="file"],
+.form-card select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: 0.3s;
+  background-color: #f8f3ce;
+}
+
+.form-card input:focus,
+.form-card select:focus {
+  border-color: #FFD700;
+  box-shadow: 0 0 4px #FFD700;
+  outline: none;
+}
+
+.form-card input[type="submit"] {
+  background-color: #003366;
+  color: white;
+  padding: 10px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: 0.3s;
+  width: 100%;
+  font-weight: bold;
+}
+
+.form-card input[type="submit"]:hover {
+  background-color: #FFD700;
+  color: #003366;
+}
+
+
+.form-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 35px 40px;
+  max-width: 600px;
+  margin: 40px auto;
+  border: 1px solid #ddd;
+  transition: 0.3s ease;
+}
+
+.form-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #003366;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-card label {
+  font-weight: 600;
+  color: #003366;
+  margin-bottom: 6px;
+}
+
+.form-card input[type="text"],
+.form-card input[type="password"],
+.form-card input[type="email"],
+.form-card input[type="file"],
+.form-card select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: 0.3s;
+  background-color: #f8f3ce;
+}
+
+.form-card input:focus,
+.form-card select:focus {
+  border-color: #FFD700;
+  box-shadow: 0 0 4px #FFD700;
+  outline: none;
+}
+
+.form-card input[type="submit"] {
+  background-color: #003366;
+  color: white;
+  padding: 10px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: 0.3s;
+  width: 100%;
+  font-weight: bold;
+}
+
+.form-card input[type="submit"]:hover {
+  background-color: #FFD700;
+  color: #003366;
+}
+
+.form-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 35px 40px;
+  max-width: 700px;
+  margin: 40px auto;
+  border: 1px solid #ddd;
+  transition: 0.3s ease;
+}
+
+.form-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.dashboard-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #003366;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.form-group {
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-card label {
+  font-weight: 600;
+  color: #003366;
+  margin-bottom: 6px;
+}
+
+.form-card input[type="text"],
+.form-card input[type="password"],
+.form-card input[type="email"],
+.form-card input[type="file"],
+.form-card input[type="number"],
+.form-card select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: 0.3s;
+  background-color: #f8f3ce;
+}
+
+.form-card input:focus,
+.form-card select:focus {
+  border-color: #FFD700;
+  box-shadow: 0 0 4px #FFD700;
+  outline: none;
+}
+
+.form-card input[type="submit"] {
+  background-color: #003366;
+  color: white;
+  padding: 10px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: 0.3s;
+  width: 100%;
+  font-weight: bold;
+}
+
+.form-card input[type="submit"]:hover {
+  background-color: #FFD700;
+  color: #003366;
+}
+
+/* Branch radio buttons */
+.branch-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 5px;
+}
+
+.branch-options label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  color: #003366;
+}
+
+
+/* Scoped only to the Issue Book form */
+#issuebook form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: 700px;
+  margin: 25px auto;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+}
+
+#issuebook .dashboard-title {
+  font-size: 22px;
+  color: #003366;
+  text-align: center;
+  margin-bottom: 18px;
+  font-weight: 600;
+}
+
+#issuebook label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+#issuebook input[type="number"],
+#issuebook select {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  transition: 0.2s ease;
+}
+
+#issuebook input:focus,
+#issuebook select:focus {
+  border-color: #003366;
+  outline: none;
+}
+
+#issuebook input[type="submit"] {
+  background-color: #FFD700;
+  color: #003366;
+  font-weight: 600;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+
+#issuebook input[type="submit"]:hover {
+  background-color: #003366;
+  color: #fff;
+}
+
+/* Mobile view */
+@media (max-width: 768px) {
+  #issuebook form {
+    max-width: 90%;
+    padding: 15px;
+  }
+
+  #issuebook .dashboard-title {
+    font-size: 18px;
+  }
+
+  #issuebook label {
+    font-size: 13px;
+  }
+
+  #issuebook input,
+  #issuebook select {
+    font-size: 13px;
+    padding: 8px;
+  }
+
+  #issuebook input[type="submit"] {
+    font-size: 13px;
+    padding: 8px;
+  }
+}
