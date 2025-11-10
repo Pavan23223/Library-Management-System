@@ -77,18 +77,34 @@ public function markFinePaid($fineid, $filename) {
 
 
 
-public function getUserFines($userid) {
-        $q = "SELECT * FROM fines WHERE userid = ?";
-        try {
-            $stmt = $this->connection->prepare($q);
-            $stmt->execute([$userid]);
-            $recordset = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $recordset;
-        } catch (PDOException $e) {
-           
-            return [];
-        }
+public function getUserFines($userid)
+{
+    try {
+        $this->setconnection();
+
+        $stmt = $this->connection->prepare("
+            SELECT 
+                f.id,
+                f.reason,
+                f.amount,
+                f.status,
+                i.issuebook AS bookname
+            FROM fines AS f
+            LEFT JOIN issuebook AS i ON f.issueid = i.id
+            WHERE f.userid = :userid
+            ORDER BY f.id DESC
+        ");
+        $stmt->bindParam(':userid', $userid, PDO::PARAM_STR);
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo '❌ Database error in getUserFines(): ' . $e->getMessage();
+        return [];
     }
+}
+
+
 
 public function getAllFinesSorted() {
     $stmt = $this->connection->prepare("
@@ -218,6 +234,26 @@ public function deleteFine($fineId) {
 
 
 
+public function returnBook($issueId) {
+    try {
+        $currentDate = date("Y-m-d");
+
+        $sql = "UPDATE issuebook 
+                SET returndate = :returndate, status = 'returned' 
+                WHERE id = :id";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bindParam(':returndate', $currentDate);
+        $stmt->bindParam(':id', $issueId);
+        $stmt->execute();
+
+        return true;
+    } catch (PDOException $e) {
+        echo "❌ Database Error (returnBook): " . $e->getMessage();
+        return false;
+    }
+}
+
+
 
     function getbook() {
         $q = "SELECT * FROM book ";
@@ -235,7 +271,7 @@ function getbookdetail($id){
 
 
     function getbookissue(){
-        $q = "SELECT * FROM book where bookava !=0 ";
+        $q = "SELECT * FROM book ";
         $data = $this->connection->query($q);
         return $data;
     }
@@ -349,14 +385,18 @@ function getbookdetailByName($bookname) {
         }
     }
 
-    function issuereport()
-    {
-            $this->setconnection();
-         $this->autoCalculateFines();
-        $q = "SELECT * FROM issuebook ";
-        $data = $this->connection->query($q);
-        return $data;
+   public function issuereport() {
+    try {
+        $sql = "SELECT * FROM issuebook ORDER BY issuedate DESC";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "❌ Database Error (issuereport): " . $e->getMessage();
+        return [];
     }
+}
+
 
   function userLogin($t1, $t2){
     $q = "SELECT * FROM userdata WHERE (id = :email OR email = :email) AND pass = :pass LIMIT 1";
@@ -377,70 +417,57 @@ function getbookdetailByName($bookname) {
 }
 
 
-function getIssueById($issueid) {
-    $stmt = $this->connection->prepare("SELECT * FROM issuebook WHERE id = :id LIMIT 1");
-    $stmt->bindParam(':id', $issueid, PDO::PARAM_INT);
-    $stmt->execute();
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-    return $row ? $row : null;
+public function getIssuedBooks() {
+    try {
+        $stmt = $this->connection->prepare("
+            SELECT 
+                i.id,
+                i.issuename AS username,
+                i.issuebook AS bookname,
+                i.issuetype,
+                i.issuedays,
+                i.issuedate,
+                i.issuereturn AS returndate,
+                i.fine,
+                i.status
+            FROM issuebook AS i
+            WHERE i.status = 'issued'
+            ORDER BY i.issuedate DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "❌ Database Error (getIssuedBooks): " . $e->getMessage();
+        return [];
+    }
 }
 
 
 
-function getissuebook($userloginid) {
-    $finePerDay = 10; // fine per overdue day
-    $today = date("Y-m-d");
-
-    // Fetch all issued books for the user
-    $q = "SELECT * FROM issuebook WHERE userid = ?";
-    $stmt = $this->connection->prepare($q);
-    $stmt->execute([$userloginid]);
-    $issueRecords = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    foreach ($issueRecords as $row) {
-        $issueId = $row['id'];
-        $bookName = $row['issuebook'];
-        $issuedate = $row['issuedate'];
-        $issuereturn = $row['issuereturn'];
-        $issuedays = $row['issuedays'];
-
-        // Calculate expected return date (issuedate + issuedays)
-        $expectedReturn = date('Y-m-d', strtotime($issuedate . " + $issuedays days"));
-
-        // Check if not yet returned and overdue
-        if ($issuereturn == '0000-00-00' && $today > $expectedReturn) {
-           $daysOverdue = floor((strtotime($today) - strtotime($expectedReturn)) / (60 * 60 * 24));
-            $newFine = $daysOverdue * $finePerDay;
-
-            // 1️⃣ Update fine in issuebook table
-            $updateIssue = $this->connection->prepare("UPDATE issuebook SET fine = ? WHERE id = ?");
-            $updateIssue->execute([$newFine, $issueId]);
-
-            // 2️⃣ Insert or update fine record in fines table
-            $checkFine = $this->connection->prepare("SELECT id FROM fines WHERE issueid = ?");
-            $checkFine->execute([$issueId]);
-
-            if ($checkFine->rowCount() == 0) {
-                // Insert new fine record
-                $reason = "Late return of '$bookName' ($daysOverdue days overdue)";
-                $insertFine = $this->connection->prepare("
-                    INSERT INTO fines (userid, issueid, reason, amount, status, fine_date)
-                    VALUES (?, ?, ?, ?, 'unpaid', NOW())
-                ");
-                $insertFine->execute([$userloginid, $issueId, $reason, $newFine]);
-            } else {
-                // Update existing fine amount if already exists
-                $updateFine = $this->connection->prepare("UPDATE fines SET amount = ?, fine_date = NOW() WHERE issueid = ?");
-                $updateFine->execute([$newFine, $issueId]);
-            }
-        }
+public function getReturnedBooks() {
+    try {
+        $stmt = $this->connection->prepare("
+            SELECT 
+                i.id,
+                i.issuename AS username,
+                i.issuebook AS bookname,
+                i.issuetype,
+                i.issuedays,
+                i.issuedate,
+                i.issuereturn AS returndate,
+                i.issuereturn AS actualreturndate,
+                i.fine,
+                i.status
+            FROM issuebook AS i
+            WHERE i.status = 'returned'
+            ORDER BY i.issuedate DESC
+        ");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        echo "❌ Database Error (getReturnedBooks): " . $e->getMessage();
+        return [];
     }
-
-    // Return updated issuebook data for dashboard display
-    $q = "SELECT * FROM issuebook WHERE userid = ?";
-    $stmt = $this->connection->prepare($q);
-    $stmt->execute([$userloginid]);
-    return $stmt;
 }
 
 //  calaculatee the fine
@@ -544,8 +571,41 @@ function autoCalculateFines() {
 }
 
 
+function normalizeResult($stmt) {
+    if (!$stmt) return [];
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    return is_array($rows) ? $rows : [];
+}
 
 
+
+public function getissuebook($userid)
+{
+    try {
+        $this->setconnection();
+
+        $stmt = $this->connection->prepare("
+            SELECT 
+                i.id,
+                i.issuebook,
+                i.issuename,
+                i.issuedate,
+                i.issuedays,
+                i.fine,
+                i.status
+            FROM issuebook AS i
+            WHERE i.userid = :userid AND i.status = 'issued'
+            ORDER BY i.issuedate DESC
+        ");
+        $stmt->bindParam(':userid', $userid);
+        $stmt->execute();
+
+        return $stmt; // returning PDOStatement (like your code expects)
+    } catch (PDOException $e) {
+        echo '❌ Database error in getissuebook(): ' . $e->getMessage();
+        return false;
+    }
+}
 
 
     // issue issuebookapprove
@@ -683,10 +743,8 @@ public function getAdminById($adminId) {
     return $row ? $row : null;
 }
 
-
-
 }
 
 
 
-?>
+

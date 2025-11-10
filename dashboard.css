@@ -242,7 +242,7 @@ body {
 .fine-card input[type="submit"]:hover,
 .btn-primary:hover,
 .submit-btn:hover {
-  background-color: var(--accent);
+  background-color:#4fc3f7;
   color: var(--primary);
 }
 

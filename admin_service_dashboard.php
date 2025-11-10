@@ -207,7 +207,7 @@ if (!empty($viewid)) {
     }
 
     header .btn:hover {
-      background: #ffd633;
+      background: #ffcc00ff;
     }
 
     .content-area {
@@ -252,6 +252,30 @@ if (!empty($viewid)) {
       font-size: 0.95rem;
       line-height: 1.5;
     }
+
+    .btn-primary {
+  background-color:var(--primary);
+  color: #ffffffff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: 0.3s;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background-color: #e6c200;
+}
+
+.status-returned {
+  background-color: #4CAF50;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 
     /* Responsive */
     @media (max-width: 768px) {
@@ -879,40 +903,112 @@ echo "</table>";
 
 
             <!-- issue Reports -->
-            <div id="issuebookreport" class="innerright portion" style="display:none">
-                <h1>Issue Book Record</h1>
-                
-                <?php
-                $u = new data;
-                $u->setconnection();
-                $u->issuereport();
-                $recordset = $u->issuereport();
+    <div id="issuebookreport" class="portion" style="display:none;">
+  <h1 class="dashboard-title">Book Issue & Return Reports</h1>
 
-                $table = "<table  class='styled-table' style='font-family: Arial, Helvetica, sans-serif;border-collapse: collapse;width: 100%;'>
-                <tr>
-                    <th style='padding: 8px;'>Issue Name</th>
-                    <th>Book Name</th>
-                    <th>Issue Date</th>
-                    <th>Return Date</th>
-                    <th>Fine</th>
-                    <th>Issue Type</th>
+  <!-- Currently Issued Books -->
+  <h2 style="margin-top: 20px; color: #003366;">Currently Issued Books</h2>
+  <?php
+  $issuedBooks = $u->getIssuedBooks(); // Fetch all issued books
+  if (!empty($issuedBooks)) {
+      echo "<table class='styled-table'>
+              <tr>
+                <th>Book Name</th>
+                <th>User</th>
+                <th>Issue Date</th>
+                <th>Days Left</th>
+                <th>Fine</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>";
+
+      foreach ($issuedBooks as $issue) {
+       // ✅ Safe and accurate days-left calculation
+$daysLeft = "<span style='color:gray;'>N/A</span>";
+
+try {
+    $today = new DateTime();
+
+    if (!empty($issue['returndate']) && $issue['returndate'] !== '0000-00-00') {
+        // use return date as due date
+        $dueDate = new DateTime($issue['returndate']);
+    } elseif (!empty($issue['issuedate']) && !empty($issue['issuedays'])) {
+        // fallback: calculate due date = issue date + issuedays
+        $dueDate = new DateTime($issue['issuedate']);
+        $dueDate->modify('+' . (int)$issue['issuedays'] . ' days');
+    } else {
+        $dueDate = null;
+    }
+
+    if ($dueDate) {
+        $diff = (int)$today->diff($dueDate)->format('%r%a');
+        if ($diff > 0) {
+            $daysLeft = "<span style='color:green; font-weight:bold;'>{$diff} days left</span>";
+        } elseif ($diff === 0) {
+            $daysLeft = "<span style='color:orange; font-weight:bold;'>Due today</span>";
+        } else {
+            $daysLeft = "<span style='color:red; font-weight:bold;'>Overdue by " . abs($diff) . " days</span>";
+        }
+    }
+} catch (Exception $e) {
+    $daysLeft = "<span style='color:gray;'>Invalid date</span>";
+}
+
+
+          echo "<tr>
+                  <td>" . htmlspecialchars($issue['bookname']) . "</td>
+                  <td>" . htmlspecialchars($issue['username']) . "</td>
+                  <td>" . htmlspecialchars($issue['issuedate']) . "</td>
+                  <td>{$daysLeft}</td>
+                  <td>" . htmlspecialchars($issue['fine']) . "</td>
+                  <td><span class='status-issued'>Issued</span></td>
+                  <td>
+                    <a href='return_book.php?issueid=" . urlencode($issue['id']) . "' 
+                       class='btn-primary' 
+                       onclick=\"return confirm('Mark this book as returned?');\">Return</a>
+                  </td>
                 </tr>";
+      }
 
-                foreach ($recordset as $row) {
-                    $table .= "<tr>";
-                    "<td>$row[0]</td>"; // (unused, kept for original)
-                    $table .= "<td>$row[2]</td>";
-                    $table .= "<td>$row[3]</td>";
-                    $table .= "<td>$row[6]</td>";
-                    $table .= "<td>$row[7]</td>";
-                    $table .= "<td>$row[8]</td>";
-                    $table .= "<td>$row[4]</td>";
-                    $table .= "</tr>";
-                }
-                $table .= "</table>";
-                echo $table;
-                ?>
-            </div>
+      echo "</table>";
+  } else {
+      echo "<p>No issued books found.</p>";
+  }
+  ?>
+
+  <!-- Recently Returned Books -->
+  <h2 style="margin-top: 40px; color: #003366;">Recently Returned Books</h2>
+  <?php
+  $returnedBooks = $u->getReturnedBooks(); // Fetch all returned books
+  if (!empty($returnedBooks)) {
+      echo "<table class='styled-table'>
+              <tr>
+                <th>Book Name</th>
+                <th>User</th>
+                <th>Issued Date</th>
+                <th>Returned On</th>
+                <th>Fine</th>
+                <th>Status</th>
+              </tr>";
+
+      foreach ($returnedBooks as $return) {
+          echo "<tr>
+                  <td>" . htmlspecialchars($return['bookname']) . "</td>
+                  <td>" . htmlspecialchars($return['username']) . "</td>
+                  <td>" . htmlspecialchars($return['issuedate']) . "</td>
+                  <td>" . htmlspecialchars($return['returndate']) . "</td>
+                  <td>" . htmlspecialchars($return['fine']) . "</td>
+                  <td>Returned</td>
+                </tr>";
+      }
+
+      echo "</table>";
+  } else {
+      echo "<p>No returned books found.</p>";
+  }
+  ?>
+</div>
+
 
 
 
@@ -1029,41 +1125,109 @@ echo "</table>";
     </div>
 
     <script>
-        // Profile dropdown
-        const profilePic = document.getElementById('profilePic');
-        const dropdownMenu = document.getElementById('dropdownMenu');
-
-        profilePic.addEventListener('click', () => dropdownMenu.classList.toggle('show'));
-        document.addEventListener('click', (e) => {
-            if (!profilePic.contains(e.target) && !dropdownMenu.contains(e.target))
-                dropdownMenu.classList.remove('show');
-        });
-
-        // Sidebar navigation
-        function loadSection(sectionId) {
-    document.querySelectorAll('.portion').forEach(s => s.style.display = 'none');
-    const target = document.getElementById(sectionId);
-    if (target) target.style.display = 'block';
-    document.querySelectorAll('.sidebar ul li').forEach(li => li.classList.remove('active'));
+   // Define loadSection FIRST (before DOM loads) so onclick handlers work
+function loadSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.portion').forEach(section => {
+        section.style.display = 'none';
+    });
+    
+    // Show the selected section
+    const targetSection = document.getElementById(sectionId);
+    if (targetSection) {
+        targetSection.style.display = 'block';
+    }
+    
+    // Remove active class from all sidebar items
+    document.querySelectorAll('.sidebar ul li').forEach(li => {
+        li.classList.remove('active');
+    });
+    
+    // Add active class to clicked item
     const activeLi = document.querySelector(`.sidebar ul li[data-section='${sectionId}']`);
-    if (activeLi) activeLi.classList.add('active');
+    if (activeLi) {
+        activeLi.classList.add('active');
+    }
 }
 
+// Profile dropdown
+const profilePic = document.getElementById('profilePic');
+const dropdownMenu = document.getElementById('dropdownMenu');
+
+if (profilePic && dropdownMenu) {
+    profilePic.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
+    });
+    
+    document.addEventListener('click', (e) => {
+        if (!profilePic.contains(e.target) && !dropdownMenu.contains(e.target)) {
+            dropdownMenu.classList.remove('show');
+        }
+    });
+}
+
+// Mobile menu toggle
 const menuToggle = document.getElementById("menuToggle");
-  const sidebar = document.querySelector(".sidebar");
+const sidebar = document.querySelector(".sidebar");
 
-  if (menuToggle && sidebar) {
+if (menuToggle && sidebar) {
     menuToggle.addEventListener("click", () => {
-      sidebar.classList.toggle("active");
+        sidebar.classList.toggle("active");
     });
 
-    // Optional: Hide sidebar when a menu item is clicked
+    // Hide sidebar when a menu item is clicked on mobile
     document.querySelectorAll(".sidebar ul li").forEach(li => {
-      li.addEventListener("click", () => {
-        sidebar.classList.remove("active");
-      });
+        li.addEventListener("click", () => {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove("active");
+            }
+        });
     });
-  }
+}
+
+// Show dashboard by default on page load
+window.addEventListener('DOMContentLoaded', () => {
+    loadSection('dashboard');
+});
+
+// Handle URL parameters (for tab switching via PHP redirects)
+const urlParams = new URLSearchParams(window.location.search);
+const tabParam = urlParams.get('tab');
+if (tabParam) {
+    loadSection(tabParam);
+}
+
+// Handle viewid parameter for book details
+const viewidParam = urlParams.get('viewid');
+if (viewidParam) {
+    loadSection('bookdetail');
+}
+
+// Message display function (if needed)
+const msgParam = urlParams.get('msg');
+if (msgParam) {
+    const messageBox = document.getElementById('messageBox');
+    const msgText = document.getElementById('msgText');
+    
+    if (messageBox && msgText) {
+        msgText.textContent = decodeURIComponent(msgParam.replace(/\+/g, ' '));
+        messageBox.style.display = 'block';
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            messageBox.style.display = 'none';
+        }, 5000);
+    }
+}
+
+if ($today > $dueDate) {
+    $daysLeft = "<span class='days-overdue'>Overdue by {$diff} days</span>";
+} else {
+    $daysLeft = "<span class='days-left'>{$diff} days left</span>";
+}
+
+
     </script>
 
 </body>

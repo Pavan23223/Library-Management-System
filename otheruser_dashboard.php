@@ -46,10 +46,17 @@ if (!$user) {
     die("❌ No user record found for ID: " . htmlspecialchars($userloginid));
 }
 
+
+
+
+
+
+
 // Save session id for later pages
 $_SESSION["userid"] = $user['id'];
 
 // Basic user vars
+$search = $_GET['search'] ?? '';
 $name = $user['name'] ?? "Unknown";
 $email = $user['email'] ?? "";
 $type = $user['type'] ?? "";
@@ -555,6 +562,105 @@ img.book-thumb {
   color: #e74c3c;
 }
 
+.branch-section {
+  margin-bottom: 40px;
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.branch-title {
+  color: #003366;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  border-left: 6px solid #FFD700;
+  padding-left: 10px;
+}
+
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.styled-table th {
+  background-color: #003366;
+  color: #ffffff;
+  text-align: left;
+  padding: 10px;
+}
+
+.styled-table td {
+  padding: 10px;
+  border-bottom: 1px solid #dddddd;
+}
+
+.styled-table tr:hover {
+  background-color: #f8f3ce;
+}
+
+.book-thumb {
+  width: 60px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.btn-primary {
+  background-color:  #003366 ;
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 10px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: 0.3s;
+  text-decoration: none;
+}
+
+.btn-primary:hover {
+  background-color: #2169c7ff;
+  color: #000000ff;
+}
+.btn-disabled {
+  background-color: #ccc;
+  color: #666;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: not-allowed;
+}
+
+
+.search-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px;
+}
+.search-bar input {
+  width: 300px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+.search-bar button {
+  padding: 8px 14px;
+  border: none;
+  background-color: #003366;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.search-bar button:hover {
+  background-color: #FFD700;
+  color: black;
+}
 
 
 /* ===== RESPONSIVE ===== */
@@ -632,7 +738,7 @@ img.book-thumb {
     </tr>
     <?php 
     foreach ($user as $key => $value): 
-        if (in_array($key, ['photo', 'password'])) continue; // Skip photo & password
+        if (in_array($key, ['photo', 'pass'])) continue; // Skip photo & password
         if ($value === null || $value === '') $value = '-';
     ?>
       <tr>
@@ -646,51 +752,74 @@ img.book-thumb {
 
       <!-- REQUEST BOOK -->
       <section id="requestbook" class="card" style="display:none">
-        <h3>Request Book</h3>
+  <h3>Request Book</h3>
 
-        <?php if (count($availableBooks) === 0): ?>
-          <p>No available books right now.</p>
-        <?php else: ?>
-          <table class="styled-table">
-            <tr>
-              <th>Image</th>
-              <th>Book Name</th>
-              <th>Details</th>
-              <th>Author</th>
-              <th>Branch</th>
-              <th>Action</th>
-            </tr>
-            <?php foreach ($availableBooks as $row): 
-                // row may be assoc; support numeric index fallback
-                $bookId = $row['id'] ?? ($row[0] ?? null);
-                $bookPic = $row['bookpic'] ?? ($row[1] ?? '');
-                $bookName = $row['bookname'] ?? ($row[2] ?? 'Unknown');
-                $bookDetail = $row['bookdetail'] ?? ($row[3] ?? '');
-                $bookAuthor = $row['bookauthor'] ?? ($row[4] ?? '');
-                $bookBranch = $row['branch'] ?? ($row[6] ?? '');
-                $picFile = basename($bookPic);
-                $serverPath = __DIR__ . "/$uploadsDir" . $picFile;
-                $publicUrl = file_exists($serverPath) ? $uploadsDir . rawurlencode($picFile) : $fallback;
-            ?>
-            <tr>
-              <td><img src="<?php echo htmlspecialchars($publicUrl); ?>" class="book-thumb" alt="pic"></td>
-              <td><?php echo htmlspecialchars($bookName); ?></td>
-              <td><?php echo htmlspecialchars($bookDetail); ?></td>
-              <td><?php echo htmlspecialchars($bookAuthor); ?></td>
-              <td><?php echo htmlspecialchars($bookBranch); ?></td>
-              <td>
-                <!-- requestbook.php should accept bookid and userid -->
-                <?php if ($bookId): ?>
-                  <a class="btn-primary" href="requestbook.php?bookid=<?php echo urlencode($bookId); ?>&userid=<?php echo urlencode($userloginid); ?>">Request</a>
-                <?php else: ?>
-                  N/A
-                <?php endif; ?>
-              </td>
-            </tr>
-            <?php endforeach; ?>
-          </table>
-        <?php endif; ?>
-      </section>
+  <?php if (count($availableBooks) === 0): ?>
+    <p>No available books right now.</p>
+  <?php else: ?>
+    <?php
+    // Group books by branch
+    $booksByBranch = [];
+    foreach ($availableBooks as $row) {
+        $branch = $row['branch'] ?? ($row[6] ?? 'Unknown');
+        $booksByBranch[$branch][] = $row;
+    }
+    ?>
+
+    <?php foreach ($booksByBranch as $branch => $books): ?>
+      <div class="branch-section">
+        <h4 class="branch-title"><?php echo htmlspecialchars(strtoupper($branch)); ?></h4>
+        <table class="styled-table">
+          <tr>
+            <th>Image</th>
+            <th>Book Name</th>
+            <th>Details</th>
+            <th>Available</th>
+            <th>Author</th>
+            <th>Branch</th>
+            <th>Action</th>
+          </tr>
+
+          <?php foreach ($books as $row): 
+              $bookId = $row['id'] ?? ($row[0] ?? null);
+              $bookPic = $row['bookpic'] ?? ($row[1] ?? '');
+              $bookName = $row['bookname'] ?? ($row[2] ?? 'Unknown');
+              $bookDetail = $row['bookdetail'] ?? ($row[3] ?? '');
+              $bookAvailable = $row['bookava'] ?? ($row[9] ?? '');
+              $bookAuthor = $row['bookauthor'] ?? ($row[4] ?? '');
+              $bookBranch = $row['branch'] ?? ($row[6] ?? '');
+              $picFile = basename($bookPic);
+              $serverPath = __DIR__ . "/$uploadsDir" . $picFile;
+              $publicUrl = file_exists($serverPath) ? $uploadsDir . rawurlencode($picFile) : $fallback;
+          ?>
+          <tr>
+            <td><img src="<?php echo htmlspecialchars($publicUrl); ?>" class="book-thumb" alt="pic"></td>
+            <td><?php echo htmlspecialchars($bookName); ?></td>
+            <td><?php echo htmlspecialchars($bookDetail); ?></td>
+            <td><?php echo htmlspecialchars($bookAvailable); ?></td>
+            <td><?php echo htmlspecialchars($bookAuthor); ?></td>
+            <td><?php echo htmlspecialchars($bookBranch); ?></td>
+            <td>
+  <?php if ($bookId): ?>
+  <?php if ($bookAvailable > 0): ?>
+    <a class="btn-primary" href="requestbook.php?bookid=<?php echo urlencode($bookId); ?>&userid=<?php echo urlencode($userloginid); ?>">Request</a>
+  <?php else: ?>
+    <button class="btn-disabled" onclick="alert('❌ This book is currently unavailable for request.')">Unavailable</button>
+  <?php endif; ?>
+<?php else: ?>
+  N/A
+<?php endif; ?>
+
+</td>
+
+          </tr>
+          <?php endforeach; ?>
+        </table>
+      </div>
+    <?php endforeach; ?>
+  <?php endif; ?>
+</section>
+
 <!-- ISSUE REPORT -->
 <section id="issuereport" class="form-card" style="display:none;">
   <h2 class="dashboard-title">Book Issue Report</h2>
@@ -707,7 +836,7 @@ img.book-thumb {
         <th>Issue Date</th>
         <th>Return Day Left</th>
         <th>Fine</th>
-        <th>Actions</th>
+        
       </tr>
 
       <?php foreach ($issuedBooks as $row):
@@ -757,17 +886,7 @@ img.book-thumb {
         <td><?php echo htmlspecialchars($daysLeftText); ?></td>
         <td>₹<?php echo htmlspecialchars($fine); ?></td>
 
-        <td style="display:flex; gap:10px; justify-content:center;">
-          <?php if ($fine > 0 && $issueId): ?>
-            <a class="btn-primary" href="pay_fine.php?issueid=<?php echo urlencode($issueId); ?>">Pay Fine</a>
-          <?php endif; ?>
-
-          <?php if (!$returned && $issueId): ?>
-            <a class="btn-primary" href="return_book.php?issueid=<?php echo urlencode($issueId); ?>">Return</a>
-          <?php else: ?>
-            <span style="color:gray;">Returned</span>
-          <?php endif; ?>
-        </td>
+       
       </tr>
       <?php endforeach; ?>
     </table>
