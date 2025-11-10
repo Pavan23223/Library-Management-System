@@ -34,6 +34,20 @@ protected $connection;
     return $this->connection;
 }
 
+public function addadmin($email, $pass, $type, $photo)
+{
+    try {
+        // Use prepared statements to prevent SQL injection
+        $stmt = $this->connection->prepare("INSERT INTO admin (email, pass, type, photo) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$email, $pass, $type, $photo]);
+
+        return true;
+    } catch (PDOException $e) {
+        echo "Error adding admin: " . $e->getMessage();
+        return false;
+    }
+}
+
 
 function adminLogin($t1, $t2){
     $stmt = $this->connection->prepare("SELECT * FROM admin WHERE email=:email AND pass=:pass LIMIT 1");
@@ -172,6 +186,7 @@ public function addFine($userid, $reason, $amount) {
         return $data;
     }
 
+
     function delteuserdata($id){
         $q = "DELETE from userdata where id='$id'";
         if ($this->connection->exec($q)) {
@@ -225,66 +240,72 @@ function getbookdetail($id){
         return $data;
     }
 
-    function issuebook($book, $userselect, $days, $getdate, $returnDate)
-    {
-        // ---- Get user ----
-        $q = "SELECT * FROM userdata WHERE name='$userselect'";
-        $userResult = $this->connection->query($q);
+        function issuebook($book, $userselect, $days, $getdate, $returnDate)
+        {
+            // ---- Get user ----
+            // $q = "SELECT * FROM userdata WHERE name='$userselect'";
+            $q = "SELECT * FROM userdata WHERE id='$userselect'";
 
-        if ($userResult->rowCount() == 0) {
-            header("Location: admin_service_dashboard.php?msg=no_user");
-            exit();
+            $userResult = $this->connection->query($q);
+
+            if ($userResult->rowCount() == 0) {
+                header("Location: admin_service_dashboard.php?msg=no_user");
+                exit();
+            }
+
+            $user = $userResult->fetch(PDO::FETCH_ASSOC);
+            $issueid = $user['id'];
+            $issuetype = $user['type'];
+
+            // ---- Get book ----
+            // $q = "SELECT * FROM book WHERE bookname='$book'";
+            $q = "SELECT * FROM book WHERE id='$book'";
+
+            $bookResult = $this->connection->query($q);
+
+            if ($bookResult->rowCount() == 0) {
+                header("Location: admin_service_dashboard.php?msg=no_book");
+                exit();
+            }
+
+            $bookrow = $bookResult->fetch(PDO::FETCH_ASSOC);
+            $bookid   = $bookrow['id'];
+            $bookava  = $bookrow['bookava'];
+
+            // ---- Check availability BEFORE update ----
+            if ($bookava <= 0) {
+                header("Location: admin_service_dashboard.php?msg=not_available");
+                exit();
+            }
+
+            // ---- Update stock ----
+            $newbookava = $bookava - 1;
+            $q = "UPDATE book SET bookava='$newbookava' WHERE id='$bookid'";
+            $this->connection->exec($q);
+
+            // ---- Insert issue record ----
+            $q = "INSERT INTO issuebook
+                (userid, issuename, issuebook, issuetype, issuedays, issuedate, issuereturn, fine)
+            VALUES
+                ('$issueid', '$userselect', '$book', '$issuetype', '$days', '$getdate', '$returnDate', '0')";
+
+            if ($this->connection->exec($q)) {
+                header("Location: admin_service_dashboard.php?msg=done");
+            } else {
+                header("Location: admin_service_dashboard.php?msg=fail");
+            }
         }
 
-        $user = $userResult->fetch(PDO::FETCH_ASSOC);
-        $issueid = $user['id'];
-        $issuetype = $user['type'];
-
-        // ---- Get book ----
-        $q = "SELECT * FROM book WHERE bookname='$book'";
-        $bookResult = $this->connection->query($q);
-
-        if ($bookResult->rowCount() == 0) {
-            header("Location: admin_service_dashboard.php?msg=no_book");
-            exit();
-        }
-
-        $bookrow = $bookResult->fetch(PDO::FETCH_ASSOC);
-        $bookid   = $bookrow['id'];
-        $bookava  = $bookrow['bookava'];
-
-        // ---- Check availability BEFORE update ----
-        if ($bookava <= 0) {
-            header("Location: admin_service_dashboard.php?msg=not_available");
-            exit();
-        }
-
-        // ---- Update stock ----
-        $newbookava = $bookava - 1;
-        $q = "UPDATE book SET bookava='$newbookava' WHERE id='$bookid'";
-        $this->connection->exec($q);
-
-        // ---- Insert issue record ----
-        $q = "INSERT INTO issuebook
-            (userid, issuename, issuebook, issuetype, issuedays, issuedate, issuereturn, fine)
-          VALUES
-            ('$issueid', '$userselect', '$book', '$issuetype', '$days', '$getdate', '$returnDate', '0')";
-
-        if ($this->connection->exec($q)) {
-            header("Location: admin_service_dashboard.php?msg=done");
-        } else {
-            header("Location: admin_service_dashboard.php?msg=fail");
-        }
-    }
 
 
-
-    function getbookdetailByName($bookName){
-    $stmt = $this->connection->prepare("SELECT * FROM book WHERE bookname = :bookname LIMIT 1");
-    $stmt->bindParam(':bookname', $bookName);
-    $stmt->execute();
-    return $stmt->fetch(PDO::FETCH_ASSOC); // directly fetch
+function getbookdetailByName($bookname) {
+    $q = "SELECT * FROM book WHERE bookname = ?";
+    $stmt = $this->connection->prepare($q);
+    $stmt->execute([$bookname]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
 }
+
+
 
 
     function requestbookdata()
@@ -474,6 +495,15 @@ public function calculateOverdueFines() {
 }
 
 
+function getbookdetailById($bookId) {
+    $this->setconnection();
+    $stmt = $this->connection->prepare("SELECT * FROM book WHERE id = ?");
+    $stmt->execute([$bookId]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+
+
 function autoCalculateFines() {
     $this->setconnection();
 
@@ -656,3 +686,7 @@ public function getAdminById($adminId) {
 
 
 }
+
+
+
+?>

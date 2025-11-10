@@ -3,14 +3,20 @@ include("data_class.php");
 
 // Start session if needed
 session_start();
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+
+if (!isset($_SESSION['adminid'])) {
+    header("Location: index.html");  
+    exit();
+}
+
 
 // Create one $u object and set connection
 $u = new data();
 $u->setconnection();
 $u->calculateOverdueFines();
 $conn = $u->getConnection();
-
-
 
 try {
     // Prepare the query — adjust table/column names as per your DB
@@ -50,7 +56,7 @@ if ($adminId) {
 if (!empty($firstAdmin) && !empty($firstAdmin['photo']) && file_exists("uploads/".$firstAdmin['photo'])) {
     $profileimg = "uploads/".$firstAdmin['photo'];
 } else {
-    $profileimg = "../assets/default_photo.jpg"; // default image
+    $profileimg = "uploads/default_photo.jpg"; // default image
     $firstAdmin = $firstAdmin ?? ['email'=>'Not logged in','type'=>''];
 }
 
@@ -93,90 +99,222 @@ if (!empty($viewid)) {
 
     <title>Librarian Dashboard</title>
   <link rel="stylesheet" href="dashboard.css">
-<style>
-    /* ========== Responsive Sidebar ========== */
-@media (max-width: 768px) {
-  .menu-btn {
-    display: block;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    margin-right: 10px;
-    color: #003366;
-  }
+  <style>
+    :root {
+      --primary: #003366;   /* 60% */
+      --light-bg: #f4f6fa;  /* 30% */
+      --accent:  #f4f6fa;     /* 10% */
+      --text-dark: #1e293b;
+      --text-light: #ffffff;
+      --card-bg: #ffffff;
+    }
 
-  .sidebar {
-    position: fixed;
-    top: 85px; /* adjust for topbar height */
-    left: -250px; /* hide sidebar initially */
-    width: 220px;
-    height: 100%;
-    background: var(--sidebar-bg, #003366);
-    transition: left 0.3s ease;
-    z-index: 999;
-    padding-top: 10px;
-  }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
 
-  .sidebar.active {
-    left: 0; /* show sidebar when toggled */
-  }
+    body {
+      display: flex;
+      min-height: 100vh;
+      background-color: var(--light-bg);
+    }
 
-  .dashboard-container {
-    flex-direction: column;
-  }
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: var(--primary);
+      color: var(--text-light);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: 0.3s;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
 
-  .rightinnerdiv {
-    padding: 15px;
-  }
+    .sidebar h2 {
+      text-align: center;
+      padding: 1.5rem 0;
+      font-size: 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      letter-spacing: 1px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+    }
+
+    .sidebar ul li {
+      padding: 15px 25px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .sidebar ul li:hover,
+    .sidebar ul li.active {
+      background: var(--accent);
+      color: var(--primary);
+      border-left: 4px solid var(--primary);
+    }
+
+    .sidebar .logout {
+      padding: 15px 25px;
+      background: rgba(255, 255, 255, 0.1);
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .sidebar .logout:hover {
+      background: var(--accent);
+      color: var(--primary);
+    }
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--light-bg);
+    }
+
+    header {
+      background: var(--primary);
+      color: var(--text-light);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 600;
+    }
+
+    header .btn {
+      background: var(--accent);
+      color: var(--primary);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+
+    header .btn:hover {
+      background: #ffd633;
+    }
+
+    .content-area {
+      flex: 1;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+    }
+.cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px; /* Adds space between cards */
+  margin: 20px 0; /* Top and bottom breathing space */
+  padding: 10px;  /* Adds consistent side spacing */
 }
 
-/* ========== Desktop (hide menu button, show sidebar normally) ========== */
-@media (min-width: 769px) {
-  .menu-btn {
-    display: none; /* hide ☰ on desktop */
-  }
-
-  .sidebar {
-    position: relative;
-    left: 0;
-    width: 220px;
-    height: auto;
-    background: var(--sidebar-bg, #003366);
-  }
+.card {
+  flex: 1 1 calc(33.333% - 20px); /* 3 cards per row with gap */
+  background: var(--card-bg, #ffffff);
+  color: var(--text-dark, #003366);
+  border-radius: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  min-width: 260px; /* Prevents squishing on small screens */
 }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    }
 
-</style>
+    .card h3 {
+      color: var(--primary);
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: var(--text-dark);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        height: 100%;
+        z-index: 1000;
+      }
+
+      .sidebar.active {
+        left: 0;
+      }
+
+      header {
+        position: relative;
+      }
+
+      .menu-toggle {
+        background: none;
+        border: 2px solid var(--accent);
+        color: var(--accent);
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 18px;
+      }
+    }
+  </style>
 
 </head>
 
 <body>
 
     <!-- TOPBAR -->
-   <div class="topbar">
+  <!-- TOPBAR (Original) -->
+<div class="topbar">
   <div class="topbar-left">
-    <button id="menuToggle" class="menu-btn">☰</button>
-    <img src="../assets/logo.png" alt="Arivu Logo">
-    <span>Arivu</span>
+    <img src="assets/logo.png" alt="Arivu Logo">
+    <span>Arivu Library</span>
   </div>
-  <div class="topbar-right">
-    <a href="../index.html">Home</a>
-    <button onclick="window.location.href='logout.php'" class="logout-btn">Sign Out</button>
 
+  <div class="topbar-right">
+    <a href="index.html">Home</a>
+    <button onclick="window.location.href='logout.php'" class="logout-btn">Sign Out</button>
     <div class="profile-container">
-      <img src="<?php echo $profileimg; ?>" id="profilePic" class="profile-pic">
+      <img src="<?php echo $profileimg; ?>" id="profilePic" class="profile-pic" alt="Profile">
       <div class="dropdown" id="dropdownMenu">
         <div style="text-align:center;">
-          <img src="<?php echo $profileimg; ?>" style="width:100%;height:100%;object-fit:cover;margin-bottom:8px;">
+          <img src="<?php echo $profileimg; ?>" 
+               style="width:80%;height:80%;object-fit:cover;margin-bottom:8px;">
         </div>
         <p><b>Email:</b> <?php echo htmlspecialchars($firstAdmin['email']); ?></p>
         <p><b>Type:</b> <?php echo htmlspecialchars($firstAdmin['type']); ?></p>
         <hr>
-        <p><a href="#" onclick="loadSection('addadmin')" style="color: red;">Manage Profile</a></p>
+        <button onclick="window.location.href='logout.php'" 
+                class="logout-btn">Logout</button>
       </div>
     </div>
   </div>
 </div>
+
 
 
 
@@ -194,15 +332,15 @@ if (!empty($viewid)) {
                 <li data-section="addadmin" onclick="loadSection('addadmin')">Manage Admins</li>
                 <li data-section="addbook" onclick="loadSection('addbook')">Manage Books</li>
                 <li data-section="bookrequestapprove" onclick="loadSection('bookrequestapprove')">Requests</li>
-                <li data-section="studentrecord" onclick="loadSection('studentrecord')">Student Reports</li>
-                <li data-section="studentrecord" onclick="loadSection('adminsrecord')">Admins Reports</li>
+                <li data-section="userrecord" onclick="loadSection('userrecord')">Users Reports</li>
+                <li data-section="adminsrecord" onclick="loadSection('adminsrecord')">Admins Reports</li>
                 <li data-section="issuebook" onclick="loadSection('issuebook')">Issue Books</li>
                 <li data-section="issuebookreport" onclick="loadSection('issuebookreport')">Issue Reports</li>
                 <li data-section="bookreport" onclick="loadSection('bookreport')">Book Reports</li>
                 <li data-section="managefines" onclick="loadSection('managefines')">Manage Fines</li>
                <li data-section="finesdetails" onclick="loadSection('finesdetails')">Fines Details</li>
                <li data-section="feedbackdetails" onclick="loadSection('feedbackdetails')">Feedback / Complaints</li>
-                <li><a href="index.html">Logout</a></li>
+               <li><a href="logout.php">Logout</a></li>
             </ul>
         </div>
 
@@ -239,9 +377,8 @@ $requestCount = $u->getCount("requestbook", "approve = 0");
 
 
     <!-- fine secrion  -->
-
-    <div id="managefines" class="portion" style="display:none;">
-  <div class="fine-card">
+<div id="managefines" class="portion" style="display:none;">
+  <div class="form-card">
     <h1 class="dashboard-title">Add Fine to User</h1>
     <form action="addfine_server.php" method="post">
       <label>Select Student:</label>
@@ -261,11 +398,10 @@ $requestCount = $u->getCount("requestbook", "approve = 0");
       <label>Amount (₹):</label>
       <input type="number" step="0.01" name="amount" required>
 
-      <input type="submit" value="Add Fine" class="submit-btn">
+      <input type="submit" value="Add Fine">
     </form>
   </div>
 </div>
-
 
 
 
@@ -325,8 +461,6 @@ echo "</table>";
     ?>
 </div>
 
-
-
 <div id="feedbackdetails" class="portion" style="display:none;">
   <h1 class="dashboard-title">All Feedback / Complaints</h1>
 
@@ -343,28 +477,39 @@ echo "</table>";
                   <th>Date</th>
                   <th>Action</th>
               </tr>";
+
       foreach ($feedbacks as $fb) {
-          $imagePath = !empty($fb['image']) ? 'uploads/feedback/' . htmlspecialchars($fb['image']) : 'assets/no-image.png';
+          // ✅ Handle image properly
+          $imageHTML = "N/A";
+          if (!empty($fb['image']) && file_exists("uploads/feedback/" . $fb['image'])) {
+              $imagePath = "uploads/feedback/" . $fb['image'];
+              $imageHTML = "<a href='$imagePath' target='_blank'>
+                              <img src='$imagePath' width='60' height='60' style='object-fit:cover;border-radius:6px;'>
+                            </a>";
+          }
+
+          // ✅ Display table row
           echo "<tr>
                   <td>" . htmlspecialchars($fb['id']) . "</td>
                   <td>" . htmlspecialchars($fb['userid']) . "</td>
-                  <td>" . htmlspecialchars($fb['type']) . "</td>
+                  <td>" . htmlspecialchars(ucfirst($fb['type'])) . "</td>
                   <td>" . htmlspecialchars($fb['message']) . "</td>
-                  
-
-                  <td><a href='uploads/feedback/". htmlspecialchars($paymentProof) . "' target='_blank' style='text-decoration: none;' ><img src='$imagePath' width='60'></a></td>
-              
+                  <td>$imageHTML</td>
                   <td>" . htmlspecialchars($fb['created_at']) . "</td>
                   <td>
                       <a href='delete_feedback.php?id=" . $fb['id'] . "' 
                          onclick=\"return confirm('Are you sure you want to delete this feedback?');\" 
-                         class='delete-btn btn btn-primary' >Delete</a>
+                         class='btn btn-primary' 
+                         style='background:#ff4d4d;color:white;padding:6px 10px;border-radius:6px;text-decoration:none;'>
+                         Delete
+                      </a>
                   </td>
                 </tr>";
       }
+
       echo "</table>";
   } else {
-      echo "<p>No feedback submitted yet.</p>";
+      echo "<p style='color:#666;'>No feedback submitted yet.</p>";
   }
   ?>
 </div>
@@ -391,7 +536,7 @@ echo "</table>";
 
       <div class="form-group">
         <label>Password:</label>
-        <input type="password" name="addpass" required>
+        <input type="text" name="addpass" required>
       </div>
 
       <div class="form-group">
@@ -441,119 +586,182 @@ echo "</table>";
 
 
             <!-- ISSUE BOOK -->
-            <div id="issuebook" class="portion" style="display:none;">
-                <h1 class="dashboard-title">Issue Book</h1>
-                <form action="issuebook_server.php" method="post">
-                    <label>Choose Book:</label>
-                    <select name="book" required>
-                        <option value="">-- Select Book --</option>
-                        <?php
-                        $u = new data();
-                        $u->setconnection();
-                        $books = $u->getbookissue();
-                        foreach ($books as $book) {
-                            // Assuming $book[0] = book ID, $book[2] = book name
-                            echo "<option value='" . htmlspecialchars($book[0]) . "'>" . htmlspecialchars($book[2]) . "</option>";
-                        }
-                        ?>
-                    </select>
+<div id="issuebook" class="portion" style="display:none;">
+  <div class="form-card">
+    <h1 class="dashboard-title">Issue Book</h1>
+    <form action="issuebook_server.php" method="post" class="issue-book-form">
+      
+      <div class="form-group">
+        <label>Choose Book:</label>
+        <select name="book" required>
+          <option value="">-- Select Book --</option>
+          <?php
+          $u = new data();
+          $u->setconnection();
+          $books = $u->getbookissue();
+          foreach ($books as $book) {
+            echo "<option value='" . htmlspecialchars($book[0]) . "'>" . htmlspecialchars($book[2]) . "</option>";
+          }
+          ?>
+        </select>
+      </div>
 
-                    <label>Select Student:</label>
-                    <select name="userselect" required>
-                        <option value="">-- Select Student --</option>
-                        <?php
-                        $students = $u->userdata();
-                        foreach ($students as $student) {
-                            // Assuming $student[0] = user ID, $student[1] = name
-                            echo "<option value='" . htmlspecialchars($student[0]) . "'>" . htmlspecialchars($student[1]) . "</option>";
-                        }
-                        ?>
-                    </select>
+      <div class="form-group">
+        <label>Select Student:</label>
+        <select name="userselect" required>
+          <option value="">-- Select Student --</option>
+          <?php
+          $students = $u->userdata();
+          foreach ($students as $student) {
+            echo "<option value='" . htmlspecialchars($student[0]) . "'>" . htmlspecialchars($student[1]) . "</option>";
+          }
+          ?>
+        </select>
+      </div>
 
-                    <label>Days:</label>
-                    <input type="number" name="days" min="1" required>
+      <div class="form-group">
+        <label>Days:</label>
+        <input type="number" name="days" min="1" required>
+      </div>
 
-                    <input type="submit" value="SUBMIT" />
-                </form>
-            </div>
+      <button type="submit" class="btn-primary">Issue Book</button>
+    </form>
+  </div>
+</div>
 
 
-            <!-- BOOK REQUESTS -->
-            <div id="bookrequestapprove" class="innerright portion" style="display:none">
-                <button class="greenbtn">BOOK REQUEST APPROVE</button>
+            <!-- BOOK REQUESTS -->       
+    <div id="bookrequestapprove" class="rightinnerdiv portion" style="display:none;">
+    <h1 class="dashboard-title">Book Request Approve</h1>
+    <?php
+      $u = new data();
+      $u->setconnection();
+      $recordset = $u->requestbookdata();
 
-                <?php
-                $u = new data();
-                $u->setconnection();
-                $recordset = $u->requestbookdata();
-
-                if ($recordset) {
-                    $table = "<table style='font-family: Arial, Helvetica, sans-serif;border-collapse: collapse;width: 100%;'>
+      if ($recordset) {
+          echo "<table class='styled-table'>
+                  <thead>
                     <tr>
-                        <th>Person Name</th>
-                        <th>Person Type</th>
-                        <th>Book Name</th>
-                        <th>Days</th>
-                        <th>Approve</th>
-                    </tr>";
-
-                    foreach ($recordset as $row) {
-                        $table .= "<tr>";
-                        $table .= "<td>" . htmlspecialchars($row['username']) . "</td>";
-                        $table .= "<td>" . htmlspecialchars($row['usertype']) . "</td>";
-                        $table .= "<td>" . htmlspecialchars($row['bookname']) . "</td>";
-                        $table .= "<td>" . htmlspecialchars($row['issuedays']) . "</td>";
-                        $table .= "<td>
+                      <th>Person Name</th>
+                      <th>Person Type</th>
+                      <th>Book Name</th>
+                      <th>Days</th>
+                      <th>Approve</th>
+                    </tr>
+                  </thead>
+                  <tbody>";
+          foreach ($recordset as $row) {
+              echo "<tr>
+                      <td>" . htmlspecialchars($row['username']) . "</td>
+                      <td>" . htmlspecialchars($row['usertype']) . "</td>
+                      <td>" . htmlspecialchars($row['bookname']) . "</td>
+                      <td>" . htmlspecialchars($row['issuedays']) . "</td>
+                      <td>
                         <a href='approvebookrequest.php?reqid=" . $row['id'] . "&book=" . urlencode($row['bookname']) . "&userselect=" . urlencode($row['username']) . "&days=" . $row['issuedays'] . "'>
-                            <button type='button' class='btn btn-primary'>Approve</button>
+                          <button type='button' class='btn-primary'>Approve</button>
                         </a>
-                       </td>";
-                        $table .= "</tr>";
-                    }
-
-                    $table .= "</table>";
-                    echo $table;
-                } else {
-                    echo "<p>No book requests found.</p>";
-                }
-                ?>
-            </div>
+                      </td>
+                    </tr>";
+          }
+          echo "</tbody></table>";
+      } else {
+          echo "<p>No book requests found.</p>";
+      }
+    ?>
+</div>
 
 
-            <!-- STUDENT RECORD -->
-            <div id="studentrecord" class="portion" style="display:none;">
-                <h1 class="dashboard-title">Student RECORD</h1>
-                <?php
-                $u = new data;
-                $u->setconnection();
-                $recordset = $u->userdata();
+<!-- USER RECORD -->
+<div id="userrecord" class="portion" style="display:none;">
+    <h1 class="dashboard-title">USER RECORD</h1>
+    <?php
+    $u = new data();
+    $u->setconnection();
+    $recordset = $u->userdata();
 
-                echo "<table class='styled-table'>
+    $teachers = [];
+    $students = [];
+
+    // Separate teachers and students
+    foreach ($recordset as $row) {
+        if ($row['type'] === 'teacher') {
+            $teachers[] = $row;
+        } elseif ($row['type'] === 'student') {
+            $branchKey = !empty($row['branch']) ? $row['branch'] : "No Branch";
+            $students[$branchKey][] = $row;
+        }
+    }
+
+    // Function to get photo with fallback
+    function getUserPhoto($photo) {
+        if (!empty($photo) && file_exists('uploads/' . $photo)) {
+            return 'uploads/' . htmlspecialchars($photo);
+        } else {
+            return 'assets/no-image.png'; // Make sure this exists
+        }
+    }
+
+    // Display Teachers
+    if (!empty($teachers)) {
+        echo "<h2>Teachers</h2>";
+        echo "<table class='styled-table'>
             <tr>
                 <th>Id</th>
                 <th>Photo</th>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Type</th>
                 <th>Mobile Number</th>
-                <th>Branch</th>
                 <th>Delete</th>
             </tr>";
-                foreach ($recordset as $row) {
-                    echo "<tr>
-                    <td>{$row['id']}</td>
-                    <td><img src='uploads/{$row['photo']}' width='50px' height='50px' style='border-radius:50%;object-fit:cover;'></td>
-                <td>{$row['name']}</td>
-                <td>{$row['email']}</td>
-                <td>{$row['type']}</td>
-                <td>{$row['mobile']}</td>
-                <td>{$row['branch']}</td>
-                <td><a href='deleteuser.php?useriddelete={$row['id']}' class='delete-btn btn btn-primary'>Delete</a></td>
-              </tr>";
-                }
-                echo "</table>";
-                ?>
-            </div>
+
+        foreach ($teachers as $row) {
+            $photoPath = getUserPhoto($row['photo']);
+            echo "<tr>
+                    <td>" . htmlspecialchars($row['id']) . "</td>
+                    <td><img src='$photoPath' width='50' height='50' style='border-radius:50%;object-fit:cover;'></td>
+                    <td>" . htmlspecialchars($row['name']) . "</td>
+                    <td>" . htmlspecialchars($row['email']) . "</td>
+                    <td>" . htmlspecialchars($row['mobile']) . "</td>
+                    <td><a href='deleteuser.php?useriddelete=" . $row['id'] . "' class='delete-btn btn btn-primary'>Delete</a></td>
+                  </tr>";
+        }
+
+        echo "</table>";
+    }
+
+    // Display Students by Branch
+    if (!empty($students)) {
+        foreach ($students as $branchName => $studentList) {
+            echo "<h2>Students - Branch: " . htmlspecialchars($branchName) . "</h2>";
+            echo "<table class='styled-table'>
+                <tr>
+                    <th>Id</th>
+                    <th>Photo</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Mobile Number</th>
+                    <th>Delete</th>
+                </tr>";
+
+            foreach ($studentList as $row) {
+                $photoPath = getUserPhoto($row['photo']);
+                echo "<tr>
+                        <td>" . htmlspecialchars($row['id']) . "</td>
+                        <td><img src='$photoPath' width='50' height='50' style='border-radius:50%;object-fit:cover;'></td>
+                        <td>" . htmlspecialchars($row['name']) . "</td>
+                        <td>" . htmlspecialchars($row['email']) . "</td>
+                        <td>" . htmlspecialchars($row['mobile']) . "</td>
+                        <td><a href='deleteuser.php?useriddelete=" . $row['id'] . "' class='delete-btn btn btn-primary'>Delete</a></td>
+                      </tr>";
+            }
+
+            echo "</table>";
+        }
+    }
+    ?>
+</div>
+
+
 
 
             <!-- ADMINS RECORD -->
@@ -590,46 +798,61 @@ echo "</table>";
                 ?>
             </div>
 
+<!-- Book Reports -->
+<div id="bookreport" class="innerright portion" style="display:none">
+    <h1>BOOK RECORD</h1>
+    <?php
+    $u = new data();
+    $u->setconnection();
+    $recordset = $u->getbook(); // Fetch all books
 
-            <!-- Book Reports -->
-            <div id="bookreport" class="innerright portion" style="display:none">
-                <button class="greenbtn">BOOK RECORD</button>
-                <?php
-                $u = new data;
-                $u->setconnection();
-                $recordset = $u->getbook();
+    // Group books by branch
+    $branches = [];
+    foreach ($recordset as $row) {
+        $branches[$row['branch']][] = $row;
+    }
 
-                $table = "<table style='font-family: Arial, Helvetica, sans-serif;border-collapse: collapse;width: 100%;'>
-                <tr>
-                    <th style='padding: 8px;'>Book Name</th>
-                    <th>Price</th>
-                    <th>Qnt</th>
-                    <th>Available</th>
-                    <th>View</th>
-                </tr>";
-                foreach ($recordset as $row) {
-                    $table .= "<tr>";
-                    $table .= "<td>$row[2]</td>"; // bookname
-                    $table .= "<td>$row[7]</td>"; // bookprice
-                    $table .= "<td>$row[8]</td>"; // bookquantity
-                    $table .= "<td>$row[9]</td>"; // bookava
-                    $table .= "<td>
-                    <a href='admin_service_dashboard.php?viewid=$row[0]'>
-                        <button type='button' class='btn btn-primary'>View BOOK</button>
-                    </a>
-                   </td>";
-                    $table .= "</tr>";
-                }
-                $table .= "</table>";
-                echo $table;
-                ?>
-            </div>
+    // Loop through each branch and display table
+    foreach ($branches as $branchName => $books) {
+        echo "<h2 style='margin-top:20px;'>Branch: " . htmlspecialchars($branchName) . "</h2>";
+
+        $table = "<table class='styled-table' style='font-family: Arial, Helvetica, sans-serif;border-collapse: collapse;width: 100%;'>
+        <tr>
+            <th>Image</th>
+            <th>Book Name</th>
+            <th>Price</th>
+            <th>Qnt</th>
+            <th>Available</th>
+            <th>View</th>
+        </tr>";
+
+        foreach ($books as $row) {
+            $table .= "<tr>";
+            $table .= "<td><img src='uploads/" . htmlspecialchars($row['bookpic']) . "' alt='Book Image' style='width:60px;height:auto;'></td>";
+            $table .= "<td>" . htmlspecialchars($row['bookname']) . "</td>";
+            $table .= "<td>₹" . htmlspecialchars($row['bookprice']) . "</td>";
+            $table .= "<td>" . htmlspecialchars($row['bookquantity']) . "</td>";
+            $table .= "<td>" . htmlspecialchars($row['bookava']) . "</td>";
+            $table .= "<td>
+                        <a href='admin_service_dashboard.php?viewid=" . $row['id'] . "'>
+                            <button type='button' class='btn btn-primary'>View BOOK</button>
+                        </a>
+                       </td>";
+            $table .= "</tr>";
+        }
+
+        $table .= "</table>";
+        echo $table;
+    }
+    ?>
+</div>
+
 
             <!-- Book Details Section -->
             <div id="bookdetail" class="innerright portion"
                 style="<?php echo !empty($_REQUEST['viewid']) ? '' : 'display:none'; ?>">
 
-                <button class="greenbtn">BOOK DETAIL</button>
+                <h1 >BOOK DETAIL</h1>
 
                 <div class="bookdetail-container">
                     <!-- Book Image -->
@@ -637,7 +860,7 @@ echo "</table>";
                         <?php if (!empty($bookimg)): ?>
                             <img src="uploads/<?php echo htmlspecialchars($bookimg); ?>" alt="Book Image">
                         <?php else: ?>
-                            <img src="assets/default-book.jpg" alt="No Image Available">
+                            <img src="assets/books.png" alt="No Image Available">
                         <?php endif; ?>
                     </div>
 
@@ -657,14 +880,15 @@ echo "</table>";
 
             <!-- issue Reports -->
             <div id="issuebookreport" class="innerright portion" style="display:none">
-                <button class="greenbtn">Issue Book Record</button>
+                <h1>Issue Book Record</h1>
+                
                 <?php
                 $u = new data;
                 $u->setconnection();
                 $u->issuereport();
                 $recordset = $u->issuereport();
 
-                $table = "<table style='font-family: Arial, Helvetica, sans-serif;border-collapse: collapse;width: 100%;'>
+                $table = "<table  class='styled-table' style='font-family: Arial, Helvetica, sans-serif;border-collapse: collapse;width: 100%;'>
                 <tr>
                     <th style='padding: 8px;'>Issue Name</th>
                     <th>Book Name</th>
@@ -706,7 +930,7 @@ echo "</table>";
 
       <div class="form-group">
         <label>Password:</label>
-        <input type="password" name="pass" placeholder="Enter password" required>
+        <input type="text" name="pass" placeholder="Enter password" required>
       </div>
 
       <div class="form-group">

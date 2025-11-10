@@ -7,46 +7,42 @@
   <link rel="icon" href="assets/logo.png">
 
   <style>
-    :root {
-      --topbar-bg: #ffffff;
-      --footer-bg: #003366;
-      --button-accent: #FFD700;
-      --background: #F8F3CE;
-      --text-dark: #003366;
-      --text-light: #ffffff;
-    }
+   :root {
+  --primary: #003366;      /* deep navy */
+  --accent: #3b82f6;   /* gold */
+  --background-light: #f5f7fa; /* clean neutral background */
+  --white: #ffffff;
+  --shadow: rgba(0, 0, 0, 0.1);
+}
 
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
     }
 
-    body {
-      font-family: Arial, sans-serif;
-      background-color: var(--background);
-      padding-top: 70px; /* space for fixed navbar */
-    }
+  body {
+  background: linear-gradient(135deg, var(--background-light) 0%, #e8eef5 100%);
+  color: var(--primary);
+  padding-top: 80px;
+  overflow-x: hidden;
+  font-family: "Poppins", sans-serif;
+}
 
-    /* ---------- Top Bar ---------- */
+    /* -------- Header / Navbar ---------- */
     header {
       position: fixed;
       top: 0;
       width: 100%;
       height: 70px;
-      background-color: var(--topbar-bg);
+      background: var(--white);
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      padding: 0 20px;
-      border-bottom: 3px solid var(--footer-bg);
+      padding: 0 25px;
+      border-bottom: 3px solid var(--primary);
       z-index: 1000;
-    }
-
-    /* Navigator left + Logo */
-    .topbar-left {
-      display: flex;
-      align-items: center;
-      gap: 15px;
     }
 
     .logo {
@@ -57,20 +53,28 @@
 
     .logo img {
       height: 45px;
+      transition: transform 0.3s ease;
+    }
+
+    .logo img:hover {
+      transform: scale(1.05);
     }
 
     .logo h1 {
+      font-size: 1.8rem;
       font-family: 'Times New Roman', serif;
-      font-size: 2rem;
-      color: var(--text-dark);
+      color: var(--primary);
+      letter-spacing: 1px;
     }
 
     /* ---------- Contact Section ---------- */
     .contact-container {
       display: flex;
       flex-wrap: wrap;
+      justify-content: center;
+      align-items: flex-start;
       max-width: 1100px;
-      margin: 50px auto;
+      margin: 60px auto;
       gap: 40px;
       padding: 0 20px;
     }
@@ -78,84 +82,172 @@
     /* Left section - Form */
     .contact-form {
       flex: 1;
-      min-width: 280px;
-      background-color: #fff;
+      min-width: 300px;
+      background-color: var(--white);
       padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      border-radius: 15px;
+      box-shadow: 0 6px 20px var(--shadow);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .contact-form:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     }
 
     .contact-form h2 {
-      color: var(--text-dark);
+      color: var(--primary);
+      font-size: 1.6rem;
       margin-bottom: 20px;
+      border-left: 4px solid var(--accent);
+      padding-left: 10px;
     }
 
-    .contact-form input,
-    .contact-form textarea {
+    .contact-form input {
       width: 100%;
       padding: 12px;
       margin-bottom: 15px;
-      border: 1px solid #ccc;
+      border: 2px solid #ddd;
       border-radius: 8px;
       font-size: 14px;
+      transition: border 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .contact-form input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
       outline: none;
     }
 
-    .contact-form textarea {
-      resize: vertical;
-      height: 120px;
-    }
+    
 
     .contact-form button {
-      background-color: var(--text-dark);
-      color: var(--text-light);
+      width: 100%;
+      background-color: var(--primary);
+      color: var(--white);
       padding: 12px 20px;
       border: none;
       border-radius: 8px;
       font-weight: bold;
+      font-size: 15px;
       cursor: pointer;
       transition: 0.3s;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     }
 
     .contact-form button:hover {
-      background-color: var(--button-accent);
-      color: var(--text-dark);
-      transform: scale(1.05);
-      box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
+      background-color: var(--accent);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.25);
     }
 
     /* Right section - Contact details */
     .contact-details {
       flex: 1;
-      min-width: 280px;
-      background-color: #fff9e6;
+      min-width: 300px;
+      background-color: var(--white);
       padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      border-radius: 15px;
+      box-shadow: 0 6px 20px var(--shadow);
     }
 
     .contact-details h2 {
-      color: var(--text-dark);
+      color: var(--primary);
+      font-size: 1.6rem;
       margin-bottom: 20px;
+      border-left: 4px solid var(--accent);
+      padding-left: 10px;
     }
 
     .contact-details p {
       margin-bottom: 12px;
       color: #333;
-      line-height: 1.5;
+      line-height: 1.6;
+      font-size: 15px;
     }
 
+    /* Back button */
+    .back-btn {
+      position: fixed;
+      bottom: 25px;
+      left: 25px;
+      background-color: var(--primary);
+      color: var(--white);
+      padding: 10px 22px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+/* Modern file upload field */
+input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  background-color: #f9fafc;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #555;
+}
+
+input[type="file"]::file-selector-button {
+  background-color: var(--text-dark);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  margin-right: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background-color: var(--button-accent);
+  color: var(--text-dark);
+  transform: translateY(-1px);
+}
+
+input[type="file"]:hover {
+  border-color: var(--button-accent);
+  background-color: #fff;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+
+    .back-btn:hover {
+      background-color: var(--accent);
+      color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
       .contact-container {
         flex-direction: column;
       }
+
       header {
         flex-direction: column;
         height: auto;
-        padding: 10px 20px;
+        padding: 15px;
+        gap: 10px;
       }
-      .topbar-left {
-        margin-bottom: 10px;
+
+      .logo h1 {
+        font-size: 1.6rem;
+      }
+
+      .back-btn {
+        left: 15%;
+        transform: translateX(-50%);
+        bottom: 15px;
       }
     }
   </style>
@@ -164,11 +256,9 @@
 <body>
   <!-- Top Bar -->
   <header>
-    <div class="topbar-left">
-      <div class="logo">
-        <img src="assets/logo.png" alt="Arivu Logo">
-        <h1>Arivu</h1>
-      </div>
+    <div class="logo">
+      <img src="assets/logo.png" alt="Arivu Logo">
+      <h1>Arivu</h1>
     </div>
   </header>
 
@@ -176,14 +266,18 @@
   <div class="contact-container">
     <!-- Left Section - Form -->
     <div class="contact-form">
-      <h2>Send a Query</h2>
+      <h2>Request for account</h2>
       <form id="contactForm">
         <input type="text" id="name" placeholder="Your Name" required>
+         <input type="text" id="usn" placeholder="Your USN" required>
         <input type="email" id="email" placeholder="Your Email" required>
-        <textarea id="query" placeholder="Describe your query..." required></textarea>
+        
+        <label for="idProof" style="font-weight: bold; color: #003366;">Upload ID Proof (Student/Faculty ID)</label>
+<input type="file" id="idProof" accept=".jpg,.jpeg,.png,.pdf" required>
+<small style="color: #555; font-size: 12px;">Accepted formats: JPG, PNG, or PDF (max 2MB)</small>
+
         <button type="submit">Submit</button>
         <div id="formMessage" style="margin-top: 10px; font-weight: bold;"></div>
-
       </form>
     </div>
 
@@ -196,43 +290,78 @@
       <p><strong>Office Hours:</strong> Mon - Fri: 9:00 AM - 6:00 PM</p>
     </div>
   </div>
-<div style="position: fixed; bottom: 20px; left: 20px;">
-  <button onclick="goBack()" 
-          style="padding: 10px 20px; background-color:#003366; color:#fff; border:none; border-radius:5px; font-weight:bold; cursor:pointer;">
-     Back
-  </button>
-</div>
+
+  <button onclick="goBack()" class="back-btn">Back</button>
+
   <!-- EmailJS Script -->
    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>
-  // Initialize with your public key
-emailjs.init("QrlstEKP98DuRjfNU"); 
+  // Initialize EmailJS
+  emailjs.init("QrlstEKP98DuRjfNU"); 
 
   const form = document.getElementById('contactForm');
+  const formMessage = document.getElementById('formMessage');
 
-  form.addEventListener('submit', function(event) {
-    event.preventDefault(); // prevent default form submission
-const templateParams = {
-  name: document.getElementById('name').value,
-  title: document.getElementById('query').value,
-  email: document.getElementById('email').value  
-};
-    emailjs.send("service_kral3iq", "template_8zcjuj9", templateParams)
-   .then(function(response) {
-      console.log("SUCCESS!", response.status, response.text);
-      formMessage.style.color = "green";
-      formMessage.textContent = "Your query has been sent successfully!";
-      form.reset();
-    }, function(error) {
-      console.error("FAILED...", error);
+  form.addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    const name = document.getElementById('name').value;
+    const usn = document.getElementById('usn').value;
+    const email = document.getElementById('email').value;
+    const fileInput = document.getElementById('idProof');
+    const file = fileInput.files[0];
+
+    // Validation
+    if (!file) {
       formMessage.style.color = "red";
-      formMessage.textContent = "Oops! Something went wrong. Please try again.";
+      formMessage.textContent = "Please upload your ID proof.";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      formMessage.style.color = "red";
+      formMessage.textContent = "File size must be less than 2MB.";
+      return;
+    }
+
+    // Convert to Base64 for sending
+    const base64File = await toBase64(file);
+
+    const templateParams = {
+      name,
+      usn,
+      email,
+      id_proof: file.name,
+      id_base64: base64File
+    };
+
+    // Send email via EmailJS
+    emailjs.send("service_kral3iq", "template_8zcjuj9", templateParams)
+      .then(function(response) {
+        console.log("SUCCESS!", response.status, response.text);
+        formMessage.style.color = "green";
+        formMessage.textContent = "✅ Your request has been sent successfully!";
+        form.reset();
+      }, function(error) {
+        console.error("FAILED...", error);
+        formMessage.style.color = "red";
+        formMessage.textContent = "❌ Something went wrong. Please try again.";
+      });
+  });
+
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
     });
-});
-  function goBack() {
-    window.history.back(); // goes to the previous page in history
   }
 
+  function goBack() {
+    window.history.back();
+  }
 </script>
+
 </body>
 </html>

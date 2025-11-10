@@ -31,3 +31,9 @@ if (isset($_FILES['profileimg']) && $_FILES['profileimg']['error'] === 0) {
 $obj=new data();
 $obj->setconnection();
 $obj->addnewuser($addid,$addnames,$addpass,$addemail,$addmobile,$type,$branch,$photo);
+echo "<script>
+        alert('User added successfully!');
+        window.history.back();
+      </script>";
+exit;
+?>
