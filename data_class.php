@@ -470,54 +470,123 @@ public function getReturnedBooks() {
     }
 }
 
-//  calaculatee the fine
+// Replace the calculateOverdueFines() method in data_class.php with this fixed version
+
 public function calculateOverdueFines() {
-    $today = new DateTime();
-    $finePerDay = 10; // ₹10 per day
+    try {
+        $today = new DateTime();
+        $finePerDay = 10; // ₹10 per day
 
-    $stmt = $this->connection->prepare("SELECT * FROM issuebook");
-    $stmt->execute();
-    $issues = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Fetch all issued books that haven't been returned
+        $stmt = $this->connection->prepare("
+            SELECT * FROM issuebook 
+            WHERE status = 'issued' OR status IS NULL OR status = ''
+        ");
+        $stmt->execute();
+        $issues = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    foreach ($issues as $row) {
-        $issueid = $row['id'];
-        $userid = $row['userid'];
-        $bookName = $row['issuebook'];
+        foreach ($issues as $row) {
+            $issueid = $row['id'];
+            $userid = $row['userid'];
+            $bookName = $row['issuebook'];
+            
+            // Parse issue date - try multiple formats
+            $issuedate = null;
+            if (!empty($row['issuedate']) && $row['issuedate'] !== '0000-00-00') {
+                // Try Y-m-d format first (MySQL standard)
+                $issuedate = DateTime::createFromFormat('Y-m-d', $row['issuedate']);
+                
+                // If that fails, try d/m/Y format
+                if (!$issuedate) {
+                    $issuedate = DateTime::createFromFormat('d/m/Y', $row['issuedate']);
+                }
+                
+                // If still fails, try creating from string
+                if (!$issuedate) {
+                    try {
+                        $issuedate = new DateTime($row['issuedate']);
+                    } catch (Exception $e) {
+                        continue; // Skip this record if date is invalid
+                    }
+                }
+            }
+            
+            if (!$issuedate) {
+                continue; // Skip if we couldn't parse the date
+            }
 
-        // 🔥 Use correct date format (d/m/Y)
-        $issuedate = DateTime::createFromFormat('d/m/Y', $row['issuedate']);
-        $dueDate = DateTime::createFromFormat('d/m/Y', $row['issuereturn']);
+            // Calculate due date
+            $issueDays = (int)($row['issuedays'] ?? 7); // Default 7 days if not set
+            $dueDate = clone $issuedate;
+            $dueDate->modify("+{$issueDays} days");
 
-        if (!$issuedate || !$dueDate) {
-            continue; // skip if date parsing fails
-        }
+            // Check if overdue
+            if ($today > $dueDate) {
+                $overdueDays = $today->diff($dueDate)->days;
+                $fineAmount = $overdueDays * $finePerDay;
 
-        // Only if overdue
-        if ($today > $dueDate) {
-            $overdueDays = $today->diff($dueDate)->days;
-            $fineAmount = $overdueDays * $finePerDay;
-
-            // Avoid duplicate fines
-            $check = $this->connection->prepare("SELECT * FROM fines WHERE issueid = :issueid");
-            $check->execute([':issueid' => $issueid]);
-
-            if ($check->rowCount() == 0) {
-                $reason = "Late return of '$bookName' ({$overdueDays} days overdue)";
-                $stmt2 = $this->connection->prepare("
-                    INSERT INTO fines (userid, issueid, reason, amount, status, fine_date)
-                    VALUES (:userid, :issueid, :reason, :amount, 'unpaid', NOW())
+                // Check if fine already exists for this issue
+                $checkStmt = $this->connection->prepare("
+                    SELECT id FROM fines WHERE issueid = :issueid
                 ");
-                $stmt2->execute([
-                    ':userid' => $userid,
-                    ':issueid' => $issueid,
-                    ':reason' => $reason,
-                    ':amount' => $fineAmount
-                ]);
+                $checkStmt->execute([':issueid' => $issueid]);
 
-                $updateFine = $this->connection->prepare("UPDATE issuebook SET fine = :fine WHERE id = :id");
-                $updateFine->execute([':fine' => $fineAmount, ':id' => $issueid]);
+                if ($checkStmt->rowCount() == 0) {
+                    // No existing fine - create new one
+                    $reason = "Late return of '$bookName' ({$overdueDays} days overdue)";
+                    
+                    $insertStmt = $this->connection->prepare("
+                        INSERT INTO fines (userid, issueid, reason, amount, status, fine_date)
+                        VALUES (:userid, :issueid, :reason, :amount, 'unpaid', NOW())
+                    ");
+                    
+                    $insertStmt->execute([
+                        ':userid' => $userid,
+                        ':issueid' => $issueid,
+                        ':reason' => $reason,
+                        ':amount' => $fineAmount
+                    ]);
+
+                    // Update fine amount in issuebook table
+                    $updateStmt = $this->connection->prepare("
+                        UPDATE issuebook SET fine = :fine WHERE id = :id
+                    ");
+                    $updateStmt->execute([
+                        ':fine' => $fineAmount,
+                        ':id' => $issueid
+                    ]);
+                } else {
+                    // Fine exists - update it if amount changed
+                    $updateFineStmt = $this->connection->prepare("
+                        UPDATE fines 
+                        SET amount = :amount, 
+                            reason = :reason 
+                        WHERE issueid = :issueid AND status = 'unpaid'
+                    ");
+                    
+                    $reason = "Late return of '$bookName' ({$overdueDays} days overdue)";
+                    $updateFineStmt->execute([
+                        ':amount' => $fineAmount,
+                        ':reason' => $reason,
+                        ':issueid' => $issueid
+                    ]);
+
+                    // Update issuebook table
+                    $updateStmt = $this->connection->prepare("
+                        UPDATE issuebook SET fine = :fine WHERE id = :id
+                    ");
+                    $updateStmt->execute([
+                        ':fine' => $fineAmount,
+                        ':id' => $issueid
+                    ]);
+                }
             }
         }
+        
+        return true;
+    } catch (PDOException $e) {
+        error_log("❌ Fine Calculation Error: " . $e->getMessage());
+        return false;
     }
 }
 
