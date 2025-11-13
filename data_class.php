@@ -291,6 +291,7 @@ function getbookdetail($id){
 
             $user = $userResult->fetch(PDO::FETCH_ASSOC);
             $issueid = $user['id'];
+            $issuename = $user['name'];
             $issuetype = $user['type'];
 
             // ---- Get book ----
@@ -306,6 +307,7 @@ function getbookdetail($id){
 
             $bookrow = $bookResult->fetch(PDO::FETCH_ASSOC);
             $bookid   = $bookrow['id'];
+            $bookname = $bookrow['bookname'];
             $bookava  = $bookrow['bookava'];
 
             // ---- Check availability BEFORE update ----
@@ -321,9 +323,10 @@ function getbookdetail($id){
 
             // ---- Insert issue record ----
             $q = "INSERT INTO issuebook
-                (userid, issuename, issuebook, issuetype, issuedays, issuedate, issuereturn, fine)
-            VALUES
-                ('$issueid', '$userselect', '$book', '$issuetype', '$days', '$getdate', '$returnDate', '0')";
+    (userid, issuename, issuebook, issuetype, issuedays, issuedate, issuereturn, fine)
+VALUES
+    ('$issueid', '$issuename', '$bookname', '$issuetype', '$days', '$getdate', '$returnDate', '0')";
+
 
             if ($this->connection->exec($q)) {
                 header("Location: admin_service_dashboard.php?msg=done");
@@ -646,6 +649,69 @@ function normalizeResult($stmt) {
     return is_array($rows) ? $rows : [];
 }
 
+
+
+
+public function searchBooks($searchTerm) {
+    try {
+        $searchTerm = trim($searchTerm);
+        
+        // If search term is empty, return all books
+        if (empty($searchTerm)) {
+            return $this->getbook();
+        }
+        
+        // Prepare search query - searches in id, bookname, and bookauthor
+        $stmt = $this->connection->prepare("
+            SELECT * FROM book 
+            WHERE id LIKE :search 
+            OR bookname LIKE :search 
+            OR bookauthor LIKE :search 
+            ORDER BY bookname ASC
+        ");
+        
+        $searchParam = '%' . $searchTerm . '%';
+        $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("❌ Search Error: " . $e->getMessage());
+        return [];
+    }
+}
+
+// 2. For user dashboard - add this search method for request book section
+public function searchAvailableBooks($searchTerm) {
+    try {
+        $searchTerm = trim($searchTerm);
+        
+        if (empty($searchTerm)) {
+            // Return all available books
+            $stmt = $this->connection->prepare("SELECT * FROM book WHERE bookava > 0 ORDER BY bookname ASC");
+            $stmt->execute();
+        } else {
+            // Search in available books only
+            $stmt = $this->connection->prepare("
+                SELECT * FROM book 
+                WHERE (id LIKE :search 
+                OR bookname LIKE :search 
+                OR bookauthor LIKE :search)
+                AND bookava > 0
+                ORDER BY bookname ASC
+            ");
+            
+            $searchParam = '%' . $searchTerm . '%';
+            $stmt->bindParam(':search', $searchParam, PDO::PARAM_STR);
+            $stmt->execute();
+        }
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("❌ Search Error: " . $e->getMessage());
+        return [];
+    }
+}
 
 
 public function getissuebook($userid)

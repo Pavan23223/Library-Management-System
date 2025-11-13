@@ -751,11 +751,43 @@ img.book-thumb {
 
 
       <!-- REQUEST BOOK -->
-      <section id="requestbook" class="card" style="display:none">
+    <section id="requestbook" class="card" style="display:none">
   <h3>Request Book</h3>
 
-  <?php if (count($availableBooks) === 0): ?>
-    <p>No available books right now.</p>
+  <!-- Search Bar -->
+  <div class="search-bar">
+    <form method="GET" action="" style="display:flex; gap:10px; margin-bottom:20px;">
+      <input type="hidden" name="section" value="requestbook">
+      <input 
+        type="text" 
+        name="search" 
+        placeholder="Search by book name, author, or ID..." 
+        value="<?php echo htmlspecialchars($search); ?>"
+        style="flex:1; padding:10px; border:2px solid var(--primary); border-radius:8px; font-size:1rem;">
+      <button type="submit" class="btn-primary" style="padding:10px 20px;">
+        🔍 Search
+      </button>
+      <?php if (!empty($search)): ?>
+        <a href="?section=requestbook" class="btn-secondary" style="padding:10px 20px; text-decoration:none; display:inline-block;">
+          Clear
+        </a>
+      <?php endif; ?>
+    </form>
+  </div>
+
+  <?php 
+  // Get books based on search
+  if (!empty($search)) {
+      $availableBooks = $u->searchAvailableBooks($search);
+  } else {
+      $availableBooks = $u->getbookissue();
+      $availableBooks = normalizeResult($availableBooks);
+  }
+  
+  if (count($availableBooks) === 0): ?>
+    <p style="text-align:center; color:#666; padding:20px;">
+      <?php echo !empty($search) ? 'No books found matching your search.' : 'No available books right now.'; ?>
+    </p>
   <?php else: ?>
     <?php
     // Group books by branch
@@ -766,17 +798,23 @@ img.book-thumb {
     }
     ?>
 
+    <?php if (!empty($search)): ?>
+      <p style="color:var(--primary); font-weight:600; margin-bottom:15px;">
+        Found <?php echo count($availableBooks); ?> book(s) matching "<?php echo htmlspecialchars($search); ?>"
+      </p>
+    <?php endif; ?>
+
     <?php foreach ($booksByBranch as $branch => $books): ?>
       <div class="branch-section">
         <h4 class="branch-title"><?php echo htmlspecialchars(strtoupper($branch)); ?></h4>
         <table class="styled-table">
           <tr>
             <th>Image</th>
+            <th>Book ID</th>
             <th>Book Name</th>
             <th>Details</th>
-            <th>Available</th>
             <th>Author</th>
-            <th>Branch</th>
+            <th>Available</th>
             <th>Action</th>
           </tr>
 
@@ -785,33 +823,27 @@ img.book-thumb {
               $bookPic = $row['bookpic'] ?? ($row[1] ?? '');
               $bookName = $row['bookname'] ?? ($row[2] ?? 'Unknown');
               $bookDetail = $row['bookdetail'] ?? ($row[3] ?? '');
-              $bookAvailable = $row['bookava'] ?? ($row[9] ?? '');
               $bookAuthor = $row['bookauthor'] ?? ($row[4] ?? '');
-              $bookBranch = $row['branch'] ?? ($row[6] ?? '');
+              $bookAvailable = $row['bookava'] ?? ($row[9] ?? '');
+              
               $picFile = basename($bookPic);
               $serverPath = __DIR__ . "/$uploadsDir" . $picFile;
               $publicUrl = file_exists($serverPath) ? $uploadsDir . rawurlencode($picFile) : $fallback;
           ?>
           <tr>
             <td><img src="<?php echo htmlspecialchars($publicUrl); ?>" class="book-thumb" alt="pic"></td>
+            <td><strong><?php echo htmlspecialchars($bookId); ?></strong></td>
             <td><?php echo htmlspecialchars($bookName); ?></td>
             <td><?php echo htmlspecialchars($bookDetail); ?></td>
-            <td><?php echo htmlspecialchars($bookAvailable); ?></td>
             <td><?php echo htmlspecialchars($bookAuthor); ?></td>
-            <td><?php echo htmlspecialchars($bookBranch); ?></td>
+            <td><?php echo htmlspecialchars($bookAvailable); ?></td>
             <td>
-  <?php if ($bookId): ?>
-  <?php if ($bookAvailable > 0): ?>
-    <a class="btn-primary" href="requestbook.php?bookid=<?php echo urlencode($bookId); ?>&userid=<?php echo urlencode($userloginid); ?>">Request</a>
-  <?php else: ?>
-    <button class="btn-disabled" onclick="alert('❌ This book is currently unavailable for request.')">Unavailable</button>
-  <?php endif; ?>
-<?php else: ?>
-  N/A
-<?php endif; ?>
-
-</td>
-
+              <?php if ($bookId && $bookAvailable > 0): ?>
+                <a class="btn-primary" href="requestbook.php?bookid=<?php echo urlencode($bookId); ?>&userid=<?php echo urlencode($userloginid); ?>">Request</a>
+              <?php else: ?>
+                <button class="btn-disabled" onclick="alert('❌ This book is currently unavailable.')">Unavailable</button>
+              <?php endif; ?>
+            </td>
           </tr>
           <?php endforeach; ?>
         </table>

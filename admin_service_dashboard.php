@@ -631,9 +631,9 @@ echo "</table>";
       </div>
 
       <div class="form-group">
-        <label>Select Student:</label>
+        <label>Select User:</label>
         <select name="userselect" required>
-          <option value="">-- Select Student --</option>
+          <option value="">-- Select User --</option>
           <?php
           $students = $u->userdata();
           foreach ($students as $student) {
@@ -825,81 +825,94 @@ echo "</table>";
 <!-- Book Reports -->
 <div id="bookreport" class="innerright portion" style="display:none">
     <h1>BOOK RECORD</h1>
+    
+    <!-- Search Bar -->
+    <div class="search-bar" style="margin-bottom:25px;">
+        <form method="GET" action="" style="display:flex; gap:10px; justify-content:center;">
+            <input type="hidden" name="tab" value="bookreport">
+            <input 
+                type="text" 
+                name="booksearch" 
+                placeholder="Search by book name, author, or ID..." 
+                value="<?php echo htmlspecialchars($_GET['booksearch'] ?? ''); ?>"
+                style="width:400px; padding:10px; border:2px solid var(--primary); border-radius:8px; font-size:1rem;">
+            <button type="submit" class="btn-primary" style="padding:10px 20px;">
+                🔍 Search
+            </button>
+            <?php if (!empty($_GET['booksearch'])): ?>
+                <a href="?tab=bookreport" class="btn-secondary" style="padding:10px 20px; text-decoration:none; display:inline-block;">
+                    Clear
+                </a>
+            <?php endif; ?>
+        </form>
+    </div>
+
     <?php
     $u = new data();
     $u->setconnection();
-    $recordset = $u->getbook(); // Fetch all books
-
-    // Group books by branch
-    $branches = [];
-    foreach ($recordset as $row) {
-        $branches[$row['branch']][] = $row;
+    
+    // Get books based on search
+    $searchTerm = $_GET['booksearch'] ?? '';
+    if (!empty($searchTerm)) {
+        $recordset = $u->searchBooks($searchTerm);
+        echo "<p style='color:var(--primary); font-weight:600; text-align:center; margin-bottom:15px;'>
+                Found " . count($recordset) . " book(s) matching \"" . htmlspecialchars($searchTerm) . "\"
+              </p>";
+    } else {
+        $recordset = $u->getbook();
     }
 
-    // Loop through each branch and display table
-    foreach ($branches as $branchName => $books) {
-        echo "<h2 style='margin-top:20px;'>Branch: " . htmlspecialchars($branchName) . "</h2>";
-
-        $table = "<table class='styled-table' style='font-family: Arial, Helvetica, sans-serif;border-collapse: collapse;width: 100%;'>
-        <tr>
-            <th>Image</th>
-            <th>Book Name</th>
-            <th>Price</th>
-            <th>Qnt</th>
-            <th>Available</th>
-            <th>View</th>
-        </tr>";
-
-        foreach ($books as $row) {
-            $table .= "<tr>";
-            $table .= "<td><img src='uploads/" . htmlspecialchars($row['bookpic']) . "' alt='Book Image' style='width:60px;height:auto;'></td>";
-            $table .= "<td>" . htmlspecialchars($row['bookname']) . "</td>";
-            $table .= "<td>₹" . htmlspecialchars($row['bookprice']) . "</td>";
-            $table .= "<td>" . htmlspecialchars($row['bookquantity']) . "</td>";
-            $table .= "<td>" . htmlspecialchars($row['bookava']) . "</td>";
-            $table .= "<td>
-                        <a href='admin_service_dashboard.php?viewid=" . $row['id'] . "'>
-                            <button type='button' class='btn btn-primary'>View BOOK</button>
-                        </a>
-                       </td>";
-            $table .= "</tr>";
+    if (empty($recordset)) {
+        echo "<p style='text-align:center; color:#666; padding:20px;'>No books found.</p>";
+    } else {
+        // Group books by branch
+        $branches = [];
+        foreach ($recordset as $row) {
+            $branches[$row['branch']][] = $row;
         }
 
-        $table .= "</table>";
-        echo $table;
+        // Loop through each branch and display table
+        foreach ($branches as $branchName => $books) {
+            echo "<h2 style='margin-top:20px; color:var(--primary);'>Branch: " . htmlspecialchars($branchName) . "</h2>";
+
+            echo "<table class='styled-table'>
+            <tr>
+                <th>Image</th>
+                <th>Book ID</th>
+                <th>Book Name</th>
+                <th>Author</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Available</th>
+                <th>Action</th>
+            </tr>";
+
+            foreach ($books as $row) {
+                echo "<tr>";
+                echo "<td><img src='uploads/" . htmlspecialchars($row['bookpic']) . "' alt='Book' style='width:60px;height:80px;object-fit:cover;border-radius:8px;'></td>";
+                echo "<td><strong>" . htmlspecialchars($row['id']) . "</strong></td>";
+                echo "<td>" . htmlspecialchars($row['bookname']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['bookauthor']) . "</td>";
+                echo "<td>₹" . htmlspecialchars($row['bookprice']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['bookquantity']) . "</td>";
+                echo "<td>" . htmlspecialchars($row['bookava']) . "</td>";
+                echo "<td>
+        <a href='delete_book.php?id=" . $row['id'] . "&tab=bookreport'
+           onclick='return confirm(\"Are you sure you want to delete this book?\")'
+           style='color:#fff; background:#d9534f; padding:6px 10px; border-radius:6px; text-decoration:none;'>
+           Delete
+        </a>
+      </td>";
+
+                echo "</tr>";
+            }
+
+            echo "</table>";
+        }
     }
     ?>
 </div>
 
-
-            <!-- Book Details Section -->
-            <div id="bookdetail" class="innerright portion"
-                style="<?php echo !empty($_REQUEST['viewid']) ? '' : 'display:none'; ?>">
-
-                <h1 >BOOK DETAIL</h1>
-
-                <div class="bookdetail-container">
-                    <!-- Book Image -->
-                    <div class="book-img">
-                        <?php if (!empty($bookimg)): ?>
-                            <img src="uploads/<?php echo htmlspecialchars($bookimg); ?>" alt="Book Image">
-                        <?php else: ?>
-                            <img src="assets/books.png" alt="No Image Available">
-                        <?php endif; ?>
-                    </div>
-
-                    <!-- Book Info -->
-                    <div class="book-info">
-                        <p><strong>Book Name:</strong> <?php echo htmlspecialchars($bookname ?? 'N/A'); ?></p>
-                        <p><strong>Book Detail:</strong> <?php echo htmlspecialchars($bookdetail ?? 'N/A'); ?></p>
-                        <p><strong>Book Author:</strong> <?php echo htmlspecialchars($bookauthour ?? 'N/A'); ?></p>
-                        <p><strong>Book Publisher:</strong> <?php echo htmlspecialchars($bookpub ?? 'N/A'); ?></p>
-                        <p><strong>Book Branch:</strong> <?php echo htmlspecialchars($branch ?? 'N/A'); ?></p>
-                        <p><strong>Book Price:</strong> ₹<?php echo htmlspecialchars($bookprice ?? 'N/A'); ?></p>
-                        <p><strong>Book Available:</strong> <?php echo htmlspecialchars($bookava ?? 'N/A'); ?></p>
-                    </div>
-                </div>
-            </div>
 
 
             <!-- issue Reports -->
@@ -1226,6 +1239,7 @@ if ($today > $dueDate) {
 } else {
     $daysLeft = "<span class='days-left'>{$diff} days left</span>";
 }
+
 
 
     </script>
